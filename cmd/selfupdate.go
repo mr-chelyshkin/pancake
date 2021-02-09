@@ -4,6 +4,7 @@ import (
 	"github.com/blang/semver"
 	"github.com/rhysd/go-github-selfupdate/selfupdate"
 	"log"
+	"os"
 )
 
 const appSlug = "mr-chelyshkin/pancake"
@@ -18,8 +19,9 @@ func update() {
 		return
 	}
 	if !latest.Version.Equals(v) {
-		log.Println("Successfully updated to version", latest.Version)
+		log.Println("cli app was updated, run it again", latest.Version)
 		log.Println("Release note:\n", latest.ReleaseNotes)
+		os.Exit(0)
 	}
 	return
 }
