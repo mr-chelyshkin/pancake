@@ -1,6 +1,7 @@
 package template
 
 import (
+	"fmt"
 	"github.com/blang/semver"
 	"github.com/rhysd/go-github-selfupdate/selfupdate"
 	"github.com/urfave/cli"
@@ -17,12 +18,14 @@ func Init(flags []cli.Flag) cli.Command{
 	}
 }
 
-const version = "0.0.0"
+const version = "0.0.1"
 
 func run(ctx *cli.Context) error {
 
 	v := semver.MustParse(version)
-	latest, err := selfupdate.UpdateSelf(v, "mr-chelyshkin/pancakes")
+	fmt.Println(v)
+
+	latest, err := selfupdate.UpdateSelf(v, "mr-chelyshkin/pancake")
 	if err != nil {
 		log.Println("Binary update failed:", err)
 		return nil
