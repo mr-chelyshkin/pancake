@@ -16,7 +16,7 @@ Application endpoint.
 
 */
 
-var Version   = "0.0.0" // -ldflags change on build (set value from CI/CD tag)
+var Version   = "v0.0.0" // -ldflags change on build (set value from CI/CD tag)
 var Usage     = "pancake"
 var UsageText = "pancake [command] [global_flags / command_flags]"
 

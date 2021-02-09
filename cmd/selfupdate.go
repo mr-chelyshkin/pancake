@@ -11,7 +11,7 @@ const appSlug = "mr-chelyshkin/pancake"
 
 // --
 func update() {
-	v := semver.MustParse(Version)
+	v := semver.MustParse(Version[1:])
 
 	latest, err := selfupdate.UpdateSelf(v, appSlug)
 	if err != nil {
