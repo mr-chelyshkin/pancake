@@ -18,15 +18,15 @@ jobs:
         run: |
             echo $RELEASE_VERSION
             echo ${{ env.RELEASE_VERSION }}
-#    - uses: actions/checkout@v2
-#    - uses: wangyoucao577/go-release-action@v1.14
-#      with:
-#        github_token: ${{ secrets.GITHUB_TOKEN  }}
-#        goos: ${{ matrix.goos  }}
-#        goarch: ${{ matrix.goarch  }}
-#        goversion: "https://dl.google.com/go/go1.15.1.linux-amd64.tar.gz"
-#        project_path: "./cmd"
-#        binary_name: "pancake"
-#        ldflags: "-X main.Version=${{ github.ref }}"
-#        extra_files: README.md
+      - uses: actions/checkout@v2
+      - uses: wangyoucao577/go-release-action@v1.14
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN  }}
+          goos: ${{ matrix.goos  }}
+          goarch: ${{ matrix.goarch  }}
+          goversion: "https://dl.google.com/go/go1.15.1.linux-amd64.tar.gz"
+          project_path: "./cmd"
+          binary_name: "pancake"
+          ldflags: "-X main.Version=${{ env.RELEASE_VERSION }}"
+          extra_files: README.md
 
