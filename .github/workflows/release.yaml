@@ -20,6 +20,6 @@ jobs:
         goversion: "https://dl.google.com/go/go1.15.1.linux-amd64.tar.gz"
         project_path: "./cmd"
         binary_name: "pancake"
-        ldflags: "-X main.Version=$(echo ${GITHUB_REF:10})"
+        ldflags: "-X main.Version=$(echo ${{ github.ref }} | cut -d '/' -f 3)"
         extra_files: README.md
 
