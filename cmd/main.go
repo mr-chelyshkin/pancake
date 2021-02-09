@@ -12,7 +12,10 @@ Application endpoint.
 		cli-app for generate K8S manifests from predefined config.
 		in manifest generation process cli-app take templates from repo: @@.
 
-	Commands and Options:
+	Options:
+		--skip-update:  bool flag, if set: skipping update process
+
+	Commands:
 
 */
 
@@ -29,8 +32,13 @@ func main() {
 
 	app.Flags     = globalFlags()
 	app.Commands  = commands(app.Flags)
-	update()
 
+	app.Before = func(ctx *cli.Context) error {
+		if !ctx.Bool("skip-update") {
+			update()
+		}
+		return nil
+	}
 	if err := app.Run(os.Args); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
