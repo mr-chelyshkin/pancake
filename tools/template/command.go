@@ -1,8 +1,10 @@
 package template
 
 import (
-	"fmt"
+	"github.com/blang/semver"
+	"github.com/rhysd/go-github-selfupdate/selfupdate"
 	"github.com/urfave/cli"
+	"log"
 )
 
 func Init(flags []cli.Flag) cli.Command{
@@ -15,12 +17,31 @@ func Init(flags []cli.Flag) cli.Command{
 	}
 }
 
+const version = "0.0.0"
+
 func run(ctx *cli.Context) error {
-	fmt.Println(ctx.String("global_flag"))
-	fmt.Println(ctx.String("local_flag"))
+
+	v := semver.MustParse(version)
+	latest, err := selfupdate.UpdateSelf(v, "mr-chelyshkin/pancakes")
+	if err != nil {
+		log.Println("Binary update failed:", err)
+		return nil
+	}
+
+	if latest.Version.Equals(v) {
+		// latest version is the same as current version. It means current binary is up to date.
+		log.Println("Current binary is the latest version", version)
+	} else {
+		log.Println("Successfully updated to version", latest.Version)
+		log.Println("Release note:\n", latest.ReleaseNotes)
+	}
 
 
-	fmt.Println("other")
+	//fmt.Println(ctx.String("global_flag"))
+	//fmt.Println(ctx.String("local_flag"))
+	//
+	//
+	//fmt.Println("other")
 	return nil
 }
 
