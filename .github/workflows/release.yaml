@@ -12,8 +12,6 @@ jobs:
         goarch: [amd64]
     steps:
     - uses: actions/checkout@v2
-    - name: Set env
-      run: echo ::set-env name=RELEASE_VERSION::$(echo ${GITHUB_REF:10})
     - uses: wangyoucao577/go-release-action@v1.14
       with:
         github_token: ${{ secrets.GITHUB_TOKEN  }}
@@ -22,6 +20,6 @@ jobs:
         goversion: "https://dl.google.com/go/go1.15.1.linux-amd64.tar.gz"
         project_path: "./cmd"
         binary_name: "pancake"
-        ldflags: "-X main.Version=$RELEASE_VERSION"
+        ldflags: "-X main.Version=$(echo ${GITHUB_REF:10})"
         extra_files: README.md
 
