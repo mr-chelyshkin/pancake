@@ -29,6 +29,7 @@ func main() {
 
 	app.Flags     = globalFlags()
 	app.Commands  = commands(app.Flags)
+	update()
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Println(err)
