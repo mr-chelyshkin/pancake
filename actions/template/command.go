@@ -50,13 +50,14 @@ func run(ctx *cli.Context) error {
 	}
 
 	file, err := os.Create(ctx.String("file"))
-	if err != nil {
+	if file != nil || err != nil {
 		return err
 	}
+	defer file.Close()
+
 	if err := ioutil.WriteFile(file.Name(), templateBytes, 0644); err != nil {
 		return err
 	}
-
 	log.Println(ctx.String("file"), " created")
 	return nil
 }
