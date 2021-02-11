@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/urfave/cli"
-	"pancake/tools/manifest"
-	"pancake/tools/template"
+	"pancake/actions/manifest"
+	"pancake/actions/template"
 )
 
 /*

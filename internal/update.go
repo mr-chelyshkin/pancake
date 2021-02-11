@@ -1,10 +1,9 @@
-package main
+package internal
 
 import (
 	"github.com/blang/semver"
 	"github.com/rhysd/go-github-selfupdate/selfupdate"
 	"log"
-	"os"
 )
 
 /*
@@ -24,21 +23,21 @@ self-update process.
 
 const appSlug = "mr-chelyshkin/pancake"
 
-// --
-func update() {
-	v := semver.MustParse(Version[1:])
+// -- >
+func Update(currentVersion string) bool {
+	v := semver.MustParse(currentVersion[1:])
 
 	latest, err := selfupdate.UpdateSelf(v, appSlug)
 	if err != nil {
 		log.Println("cli-app update failed: ", err)
 		log.Println("you can use flag '--skip-update' for skipping")
-		os.Exit(1)
+		return false
 	}
 	if !latest.Version.Equals(v) {
 		log.Println("cli-app was updated, new version: ", latest.Version)
 		log.Println("release note:\n", latest.ReleaseNotes)
 		log.Println("now, you can use it.")
-		os.Exit(0)
+		return true
 	}
-	return
+	return false
 }
