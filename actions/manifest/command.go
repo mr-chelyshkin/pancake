@@ -3,10 +3,15 @@ package manifest
 import (
 	"fmt"
 	"github.com/urfave/cli"
-	"gopkg.in/yaml.v2"
 	"pancake"
 	"pancake/internal"
 )
+
+/*
+manifest command.
+
+	generate k8s manifest files from template.
+*/
 
 func Init(flags []cli.Flag) cli.Command{
 	return cli.Command{
@@ -18,16 +23,18 @@ func Init(flags []cli.Flag) cli.Command{
 	}
 }
 
+// --- >
 func run(ctx *cli.Context) error {
-	templateBytes, err := internal.ReadFile(ctx.String("template"))
+	var template pancake.K8STemplate
+
+	raw, err := internal.ReadYaml(ctx.String("template"), template)
 	if err != nil {
 		return err
 	}
+	template = raw.(pancake.K8STemplate)
 
-	var obj pancake.K8STemplate
-	k8sTemplate := yaml.Unmarshal(*templateBytes, obj)
 
-	fmt.Println(k8sTemplate)
+	fmt.Println(raw.(pancake.K8STemplate))
 
 	return nil
 }

@@ -13,7 +13,7 @@ k8s template data generator.
 */
 
 type K8STemplate struct {
-	Maintainer   string `yaml:"maintainer"`
+	Maintainer   string `yaml:"maintainer" json:"maintainer"`
 	Department   string `yaml:"department"`
 
 	Applications []Application `yaml:"applications"`
