@@ -26,7 +26,7 @@ func WriteFile(filePath string, dataBytes []byte) error {
 	}
 
 	file, err := os.Create(filePath)
-	if file != nil || err != nil {
+	if file == nil || err != nil {
 		return err
 	}
 	defer file.Close()
@@ -34,7 +34,6 @@ func WriteFile(filePath string, dataBytes []byte) error {
 	if err := ioutil.WriteFile(file.Name(), dataBytes, 0644); err != nil {
 		return err
 	}
-
 	return nil
 }
 
