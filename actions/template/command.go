@@ -4,12 +4,9 @@ import (
 	"fmt"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"log"
-	"os"
 	"pancake"
 	"pancake/internal"
-	"path/filepath"
 )
 
 /*
@@ -41,23 +38,10 @@ func run(ctx *cli.Context) error {
 		fmt.Println(string(templateBytes))
 	}
 
-	fileDir, _ := filepath.Split(ctx.String("file"))
-	if fileDir == "" {
-		fileDir = "./"
-	}
-	if ok, err := internal.IsWritable(fileDir); !ok {
+	if err := internal.WriteFile(ctx.String("file"), templateBytes); err != nil {
 		return err
 	}
 
-	file, err := os.Create(ctx.String("file"))
-	if file != nil || err != nil {
-		return err
-	}
-	defer file.Close()
-
-	if err := ioutil.WriteFile(file.Name(), templateBytes, 0644); err != nil {
-		return err
-	}
 	log.Println(ctx.String("file"), " created")
 	return nil
 }
