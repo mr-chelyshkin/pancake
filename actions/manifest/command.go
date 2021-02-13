@@ -1,7 +1,6 @@
 package manifest
 
 import (
-	"fmt"
 	"github.com/urfave/cli"
 	"pancake"
 	"pancake/internal"
@@ -31,10 +30,8 @@ func run(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	template = raw.(pancake.K8STemplate)
 
-
-	fmt.Println(raw.(pancake.K8STemplate))
+	pancake.GenerateManifest(raw.(pancake.K8STemplate))
 
 	return nil
 }

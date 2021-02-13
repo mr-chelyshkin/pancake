@@ -15,6 +15,7 @@ k8s template data generator.
 type K8STemplate struct {
 	Maintainer   string `yaml:"maintainer" json:"maintainer"`
 	Department   string `yaml:"department"`
+	Namespace    string `yanl:"namespace"`
 
 	Applications []Application `yaml:"applications"`
 }
@@ -23,19 +24,19 @@ type Application struct {
 	Name           string    `yaml:"name"`
 	Type           string    `yaml:"type"`
 	VersioningBy   string    `yaml:"versioningBy"`
-	PostStart      string    `yaml:"postStart"`
-	PreStop        string    `yaml:"preStop"`
-	Liveness       string    `yaml:"liveness"`
-	Affinity       string    `yaml:"affinity"`
-	MaxSurge       string    `yaml:"maxSurge"`
-	MaxUnavailable string    `yaml:"maxUnavailable"`
-	ReplicasNum    string    `yaml:"replicasNum"`
-	InitContainers []string  `yaml:"initContainers"`
-	SideContainers []string  `yaml:"sideContainers"`
+	PostStart      string    `yaml:"postStart,omitempty"`
+	PreStop        string    `yaml:"preStop,omitempty"`
+	Liveness       string    `yaml:"liveness,omitempty"`
+	Affinity       string    `yaml:"affinity,omitempty"`
+	MaxSurge       string    `yaml:"maxSurge,omitempty"`
+	MaxUnavailable string    `yaml:"maxUnavailable,omitempty"`
+	ReplicasNum    string    `yaml:"replicasNum,omitempty"`
+	InitContainers []string  `yaml:"initContainers,omitempty"`
+	SideContainers []string  `yaml:"sideContainers,omitempty"`
 
 	Limit         Limit      `yaml:"limit"`
-	Ingress       []Firewall `yaml:"ingress"`
-	Egress        []Firewall `yaml:"egress"`
+	Ingress       []Firewall `yaml:"ingress,omitempty"`
+	Egress        []Firewall `yaml:"egress,omitempty"`
 }
 
 type Limit struct {
@@ -45,9 +46,15 @@ type Limit struct {
 }
 
 type Firewall struct {
-	Group string   `yaml:"group"`
-	Mask  string   `yaml:"mask"`
-	Ports []string `yaml:"ports"`
+	Group   string  `yaml:"group"`
+	Service string  `yaml:"service"`
+	Mask    string  `yaml:"mask"`
+	Ports   []Ports `yaml:"ports"`
+}
+
+type Ports struct {
+	Protocol string `yaml:"protocol"`
+	Port     string `yaml:"port"`
 }
 
 // -- >
@@ -71,6 +78,7 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 	go __templateServiceName__()
 	go __templateMaintainer__()
 	go __templateDepartment__()
+	go __templateNamespace__()
 	<-wait
 
 	app := Application{
@@ -113,9 +121,15 @@ var chTemplateServiceIngress = make(chan []Firewall)
 func __templateServiceIngress__() {
 	chTemplateServiceIngress <- []Firewall{
 		{
-			Group: "[string] Set group name",
-			Mask:  "[string] Set group ip mask",
-			Ports: []string{"[slice] Set ports"},
+			Group:   "[string] Set group name",
+			Service: "[string][exclude mask] Set k8s pod service",
+			Mask:    "[string][exclude pod] Set group ip mask",
+			Ports:   []Ports{
+				{
+					Protocol: "Set protocol",
+					Port:     "Set port",
+				},
+			},
 		},
 	}
 	defer close(chTemplateServiceIngress)
@@ -126,9 +140,15 @@ var chTemplateServiceEgress = make(chan []Firewall)
 func __templateServiceEgress__() {
 	chTemplateServiceEgress <- []Firewall{
 		{
-			Group: "[string] Set group name",
-			Mask:  "[string] Set group ip mask",
-			Ports: []string{"[slice] Set ports"},
+			Group:   "[string] Set group name",
+			Service: "[string][exclude mask] Set k8s pod service",
+			Mask:    "[string][exclude pod] Set group ip mask",
+			Ports:   []Ports{
+				{
+					Protocol: "Set protocol",
+					Port:     "Set port",
+				},
+			},
 		},
 	}
 	defer close(chTemplateServiceEgress)
@@ -236,4 +256,11 @@ var chTemplateDepartment = make(chan string)
 func __templateDepartment__() {
 	chTemplateDepartment <-"[string] Set department witch service belong"
 	defer close(chTemplateDepartment)
+}
+
+//
+var chTemplateNamespace = make(chan string)
+func __templateNamespace__() {
+	chTemplateNamespace <-"[string] Set namespace"
+	defer close(chTemplateNamespace)
 }

@@ -20,7 +20,7 @@ Application endpoint.
 
 var Version   = "v0.0.1" // -ldflags change on build (set value from CI/CD tag)
 var Usage     = "pancake"
-var UsageText = "pancake [command] [global_flags / command_flags]"
+var UsageText = "pancake [global_flags] [command] [command_flags]"
 
 func main() {
 	app := cli.NewApp()
