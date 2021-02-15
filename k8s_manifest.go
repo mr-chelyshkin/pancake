@@ -32,9 +32,19 @@ func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) err
 					goroutineTracker.Kill(err)
 				}
 			}
-			//if app.Egress != nil {
-			//	__generateEgress__(template.Department, app.Egress)
-			//}
+
+			if app.Egress != nil {
+				err := __generateEgress__(
+					manifestsDir,
+					templateUser.Namespace,
+					templateUser.Department,
+					app.Name,
+					app.Egress,
+				)
+				if err != nil {
+					goroutineTracker.Kill(err)
+				}
+			}
 
 		}(wg, app, templateManifestsDir)
 	}
@@ -87,6 +97,20 @@ func __generateIngress__(manifestsDir, namespace, department, app string, blocks
 	return nil
 }
 
-func __generateEgress__(department string, data []Firewall) {
-	fmt.Println("##")
+func __generateEgress__(manifestsDir, namespace, department, app string, blocks []Firewall) error {
+	template, err := getTemplatePath(manifestsDir, department, "egress.yaml.j2")
+	if err != nil {
+		return fmt.Errorf("egress block, %s", err)
+	}
+
+	for _, block := range blocks {
+		var tpl = pongo2.Must(pongo2.FromFile(*template))
+
+		out, err := tpl.Execute(pongo2.Context{"item": block, "namespace": namespace, "app": app})
+		if err != nil {
+			return fmt.Errorf("egress tpl execute, %s", err)
+		}
+		fmt.Println(out)
+	}
+	return nil
 }
