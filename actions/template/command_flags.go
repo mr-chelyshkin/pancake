@@ -15,20 +15,20 @@ func commandFlags() []cli.Flag {
 	return []cli.Flag{
 		cli.IntFlag{
 			Name:        "apps",
-			EnvVar:      "TEMPLATE_APPS_COUNT",
-			Usage:       "number of apps in generated template",
+			EnvVar:      "CONFIGS_APPS_COUNT",
+			Usage:       "number of apps in generating configs",
 			Value:       defaultAppsCount,
 		},
 		cli.StringFlag{
 			Name:        "file",
-			EnvVar:      "TEMPLATE_PATH",
-			Usage:       "filename / path for template generation",
+			EnvVar:      "CONFIGS_FILE",
+			Usage:       "configs filename",
 			Value:       defaultFileName,
 		},
 		cli.BoolFlag{
 			Name:        "stdout",
-			Usage:       "generate tamplate to stdout",
 			EnvVar:      "TEMPLATE_STDOUT",
+			Usage:       "output configs to stdout",
 		},
 	}
 }

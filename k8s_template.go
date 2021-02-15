@@ -15,7 +15,7 @@ k8s template data generator.
 type K8STemplate struct {
 	Maintainer   string `yaml:"maintainer" json:"maintainer"`
 	Department   string `yaml:"department"`
-	Namespace    string `yanl:"namespace"`
+	Namespace    string `yaml:"namespace"`
 
 	Applications []Application `yaml:"applications"`
 }
@@ -113,7 +113,7 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 }
 
 /*
-	Internal async funcs for getting "K8STemplate" struct data fields
+	Internal async functions for getting "K8STemplate" struct data fields
 */
 
 //

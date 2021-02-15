@@ -20,7 +20,6 @@ func WriteFile(filePath string, dataBytes []byte) error {
 	if fileDir == "" {
 		fileDir = "./"
 	}
-
 	if ok, err := __isWritable__(fileDir); !ok {
 		return err
 	}

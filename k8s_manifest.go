@@ -3,44 +3,76 @@ package pancake
 import (
 	"fmt"
 	"github.com/flosch/pongo2/v4"
+	"gopkg.in/tomb.v1"
+	"os"
+	"path"
 	"sync"
 )
 
-func GenerateManifest(template K8STemplate)  {
+func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) error {
+	var goroutineTracker tomb.Tomb
 	wg := &sync.WaitGroup{}
 
 	// -
-	wg.Add(len(template.Applications))
-	for _, app := range template.Applications {
-		go func(wg *sync.WaitGroup, app Application) {
+	wg.Add(len(templateUser.Applications))
+	for _, app := range templateUser.Applications {
+		go func(wg *sync.WaitGroup, app Application, manifestsDir string) {
 			defer wg.Done()
 
 			if app.Ingress != nil {
-				__generateIngress__(template.Namespace, template.Department, app.Name, app.Ingress)
+				if err := __generateIngress__(manifestsDir, templateUser.Namespace, templateUser.Department, app.Name, app.Ingress); err != nil {
+					goroutineTracker.Kill(err)
+				}
 			}
 			//if app.Egress != nil {
 			//	__generateEgress__(template.Department, app.Egress)
 			//}
 
-		}(wg, app)
+		}(wg, app, templateManifestsDir)
 	}
 	wg.Wait()
 	// -
 
-
+	select {
+	case <-goroutineTracker.Dying():
+		return goroutineTracker.Err()
+	default:
+		return nil
+	}
 }
 
+func getTemplatePath(manifestsDir, department, filename string) (*string, error) {
+	var specificTemplate = path.Join(manifestsDir, fmt.Sprintf("%s_%s", department, filename))
+	var generalTemplate  = path.Join(manifestsDir, filename)
+
+	if _, err := os.Stat(specificTemplate); err == nil {
+		return &specificTemplate, nil
+	}
+	if _, err := os.Stat(generalTemplate); err == nil {
+		return &generalTemplate, nil
+	}
+
+	return nil, fmt.Errorf(fmt.Sprintf("ingress manifest template not found, dirs: %s", manifestsDir))
+}
+
+
 //
-func __generateIngress__(namespace, department, app string, blocks []Firewall) {
+func __generateIngress__(manifestsDir, namespace, department, app string, blocks []Firewall) error {
+	template, err := getTemplatePath(manifestsDir, department, "ingress.yaml.j2")
+	if err != nil {
+		return err
+	}
+
 	for _, block := range blocks {
-		var tpl = pongo2.Must(pongo2.FromFile("/Users/i.chelyshkin/Desktop/templates/modules/ingress.yaml.j2"))
+		var tpl = pongo2.Must(pongo2.FromFile(*template))
 
 		out, err := tpl.Execute(pongo2.Context{"item": block, "namespace": namespace, "app": app})
 		if err != nil {
-			fmt.Println(err)
+			return err
 		}
 		fmt.Println(out)
 	}
+	return nil
 }
 
 func __generateEgress__(department string, data []Firewall) {
