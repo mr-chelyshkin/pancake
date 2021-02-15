@@ -4,6 +4,7 @@ import (
 	"github.com/blang/semver"
 	"github.com/rhysd/go-github-selfupdate/selfupdate"
 	"log"
+	"pancake/globals"
 )
 
 /*
@@ -21,13 +22,11 @@ self-update process.
 	workflow in: .github/workflow/release.yaml
 */
 
-const appSlug = "mr-chelyshkin/pancake"
-
 // -- >
 func Update(currentVersion string) bool {
 	v := semver.MustParse(currentVersion[1:])
 
-	latest, err := selfupdate.UpdateSelf(v, appSlug)
+	latest, err := selfupdate.UpdateSelf(v, globals.AppSlug)
 	if err != nil {
 		log.Println("cli-app update failed: ", err)
 		log.Println("you can use flag '--skip-update' for skipping")
