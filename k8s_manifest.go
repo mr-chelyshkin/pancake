@@ -11,16 +11,24 @@ import (
 
 func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) error {
 	var goroutineTracker tomb.Tomb
-	wg := &sync.WaitGroup{}
 
-	// -
+	wg := &sync.WaitGroup{}
 	wg.Add(len(templateUser.Applications))
+
+	// -- >
 	for _, app := range templateUser.Applications {
 		go func(wg *sync.WaitGroup, app Application, manifestsDir string) {
 			defer wg.Done()
 
 			if app.Ingress != nil {
-				if err := __generateIngress__(manifestsDir, templateUser.Namespace, templateUser.Department, app.Name, app.Ingress); err != nil {
+				err := __generateIngress__(
+					manifestsDir,
+					templateUser.Namespace,
+					templateUser.Department,
+					app.Name,
+					app.Ingress,
+				)
+				if err != nil {
 					goroutineTracker.Kill(err)
 				}
 			}
@@ -31,7 +39,7 @@ func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) err
 		}(wg, app, templateManifestsDir)
 	}
 	wg.Wait()
-	// -
+	// -- >
 
 	select {
 	case <-goroutineTracker.Dying():
@@ -41,6 +49,7 @@ func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) err
 	}
 }
 
+//
 func getTemplatePath(manifestsDir, department, filename string) (*string, error) {
 	var specificTemplate = path.Join(manifestsDir, fmt.Sprintf("%s_%s", department, filename))
 	var generalTemplate  = path.Join(manifestsDir, filename)
@@ -52,15 +61,18 @@ func getTemplatePath(manifestsDir, department, filename string) (*string, error)
 		return &generalTemplate, nil
 	}
 
-	return nil, fmt.Errorf(fmt.Sprintf("ingress manifest template not found, dirs: %s", manifestsDir))
+	return nil, fmt.Errorf(fmt.Sprintf("manifest template not found, in: %s", manifestsDir))
 }
 
+/*
+	Internal functions for generating manifests blocks
+*/
 
 //
 func __generateIngress__(manifestsDir, namespace, department, app string, blocks []Firewall) error {
 	template, err := getTemplatePath(manifestsDir, department, "ingress.yaml.j2")
 	if err != nil {
-		return err
+		return fmt.Errorf("ingress block, %s", err)
 	}
 
 	for _, block := range blocks {
@@ -68,7 +80,7 @@ func __generateIngress__(manifestsDir, namespace, department, app string, blocks
 
 		out, err := tpl.Execute(pongo2.Context{"item": block, "namespace": namespace, "app": app})
 		if err != nil {
-			return err
+			return fmt.Errorf("ingress tpl execute, %s", err)
 		}
 		fmt.Println(out)
 	}
