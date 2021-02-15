@@ -28,20 +28,20 @@ func Init(flags []cli.Flag) cli.Command{
 
 // --- >
 func run(ctx *cli.Context) error {
-	template := pancake.GenerateTemplateObject(ctx.Int("apps"))
+	template := pancake.GenerateTemplateObject(ctx.Int(flagApps))
 	templateBytes, err := yaml.Marshal(&template)
 	if err != nil {
 		return err
 	}
 
-	if ctx.Bool("stdout") {
+	if ctx.Bool(flagStdOut) {
 		fmt.Println(string(templateBytes))
 	}
 
-	if err := internal.WriteFile(ctx.String("file"), templateBytes); err != nil {
+	if err := internal.WriteFile(ctx.String(flagFile), templateBytes); err != nil {
 		return err
 	}
 
-	log.Println(ctx.String("file"), " created")
+	log.Println(ctx.String(flagFile), " created")
 	return nil
 }

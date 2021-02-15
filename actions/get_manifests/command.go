@@ -24,10 +24,10 @@ func Init(flags []cli.Flag) cli.Command{
 
 // --- >
 func run(ctx *cli.Context) error {
-	if err := internal.PullManifestTemplates(ctx.String("path")); err != nil {
+	if err := internal.PullManifestTemplates(ctx.String(flagPath)); err != nil {
 		return err
 	}
 
-	log.Println("templates saved in ", ctx.String("path"))
+	log.Println("templates saved in ", ctx.String(flagPath))
 	return nil
 }

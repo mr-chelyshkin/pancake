@@ -30,7 +30,7 @@ func Init(flags []cli.Flag) cli.Command{
 func run(ctx *cli.Context) error {
 	var manifestsDir string
 
-	if ctx.String("path") == "" {
+	if ctx.String(flagPath) == "" {
 		tempDir, err := ioutil.TempDir("/tmp", "_manifest")
 		if err != nil {
 			return err
@@ -42,12 +42,12 @@ func run(ctx *cli.Context) error {
 		}
 		manifestsDir = tempDir
 	} else {
-		manifestsDir = ctx.String("path")
+		manifestsDir = ctx.String(flagPath)
 	}
 
 	// -- >
 	var template pancake.K8STemplate
-	raw, err := internal.ReadYaml(ctx.String("configs"), template)
+	raw, err := internal.ReadYaml(ctx.String(flagConfigs), template)
 	if err != nil {
 		return err
 	}

@@ -11,22 +11,28 @@ const (
 	defaultAppsCount = 1
 )
 
+const (
+	flagApps   = "apps"
+	flagFile   = "file"
+	flagStdOut = "stdout"
+)
+
 func commandFlags() []cli.Flag {
 	return []cli.Flag{
 		cli.IntFlag{
-			Name:        "apps",
+			Name:        flagApps,
 			EnvVar:      "CONFIGS_APPS_COUNT",
 			Usage:       "number of apps in generating configs",
 			Value:       defaultAppsCount,
 		},
 		cli.StringFlag{
-			Name:        "file",
+			Name:        flagFile,
 			EnvVar:      "CONFIGS_FILE",
 			Usage:       "configs filename",
 			Value:       defaultFileName,
 		},
 		cli.BoolFlag{
-			Name:        "stdout",
+			Name:        flagStdOut,
 			EnvVar:      "TEMPLATE_STDOUT",
 			Usage:       "output configs to stdout",
 		},

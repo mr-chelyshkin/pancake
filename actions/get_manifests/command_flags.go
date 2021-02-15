@@ -10,10 +10,14 @@ const (
 	defaultPath  = "./"
 )
 
+const (
+	flagPath = "path"
+)
+
 func commandFlags() []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
-			Name:        "path",
+			Name:        flagPath,
 			EnvVar:      "MANIFESTS_PATH",
 			Usage:       "path for download manifests templates",
 			Value:       defaultPath,
