@@ -9,8 +9,11 @@ import (
 	"sync"
 )
 
-func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) error {
+func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) ([]string, error) {
+	var serviceManifests []string
+
 	var goroutineTracker tomb.Tomb
+	defer goroutineTracker.Done()
 
 	manifests := make(chan string, 1)
 	defer close(manifests)
@@ -57,20 +60,20 @@ func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) err
 			manifests <-appManifests
 		}(wg, app, templateManifestsDir)
 	}
+	// -- >
 
 	go func() {
 		wg.Wait()
 	}()
 
 	select {
-	case f := <-manifests:
-		fmt.Println(f)
+	case app := <-manifests:
+		serviceManifests = append(serviceManifests, app)
 	case <-goroutineTracker.Dying():
 		fmt.Println(goroutineTracker.Err())
 	}
 
-	goroutineTracker.Done()
-	return nil
+	return serviceManifests, nil
 }
 
 //

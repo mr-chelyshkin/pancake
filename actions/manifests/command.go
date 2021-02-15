@@ -9,6 +9,7 @@ import (
 	"pancake"
 	"pancake/internal"
 	"path"
+	"strings"
 )
 
 /*
@@ -52,8 +53,17 @@ func run(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("yaml configs '%s': %s", ctx.String(flagConfigs), err)
 	}
-	if err := pancake.GenerateManifest(raw.(pancake.K8STemplate), path.Join(manifestsDir, "k8s-templates")); err != nil {
+
+	manifests, err := pancake.GenerateManifest(raw.(pancake.K8STemplate), path.Join(manifestsDir, "k8s-templates"))
+	if err != nil {
 		return fmt.Errorf("generate manifests: %s", err)
+	}
+	// -- >
+
+	if ctx.Bool(flagStdOut) {
+		fmt.Println(strings.Join(manifests, "\n"))
+	} else {
+		fmt.Println("TODO: write to files")
 	}
 
 	log.Println("manifest generated")

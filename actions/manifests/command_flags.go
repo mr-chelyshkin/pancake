@@ -8,7 +8,9 @@ import "github.com/urfave/cli"
 
 const (
 	flagConfigs = "configs"
+	flagStdOut  = "stdout"
 	flagPath    = "path"
+	flagFile    = "file"
 )
 
 func commandFlags() []cli.Flag {
@@ -24,6 +26,11 @@ func commandFlags() []cli.Flag {
 			EnvVar:      "MANIFESTS_PATH",
 			Usage:       "path to manifests templates (default pull from cvs)",
 			Required:    false,
+		},
+		cli.BoolFlag{
+			Name:        flagStdOut,
+			EnvVar:      "TEMPLATE_STDOUT",
+			Usage:       "output configs to stdout",
 		},
 	}
 }
