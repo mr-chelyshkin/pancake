@@ -81,6 +81,7 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 	go __templateNamespace__()
 	<-wait
 
+	close(wait)
 	app := Application{
 		Name:           <-chTemplateServiceName,
 		Type:           <-chTemplateServiceType,
