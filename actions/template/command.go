@@ -39,7 +39,7 @@ func run(ctx *cli.Context) error {
 	}
 
 	if err := internal.WriteFile(ctx.String(flagFile), templateBytes); err != nil {
-		return err
+		return fmt.Errorf("write configs to '%s': %s", ctx.String(flagFile), err)
 	}
 
 	log.Println(ctx.String(flagFile), " created")

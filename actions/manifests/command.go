@@ -1,6 +1,7 @@
 package manifests
 
 import (
+	"fmt"
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"log"
@@ -33,12 +34,12 @@ func run(ctx *cli.Context) error {
 	if ctx.String(flagPath) == "" {
 		tempDir, err := ioutil.TempDir("/tmp", "_manifest")
 		if err != nil {
-			return err
+			return fmt.Errorf("create temp direcotry: %s", err)
 		}
 		defer os.RemoveAll(tempDir)
 
 		if err := internal.PullManifestTemplates(tempDir); err != nil {
-			return err
+			return fmt.Errorf("pull k8s manifests templates from '%s': %s", tempDir, err)
 		}
 		manifestsDir = tempDir
 	} else {
@@ -49,10 +50,10 @@ func run(ctx *cli.Context) error {
 	var template pancake.K8STemplate
 	raw, err := internal.ReadYaml(ctx.String(flagConfigs), template)
 	if err != nil {
-		return err
+		return fmt.Errorf("yaml configs '%s': %s", ctx.String(flagConfigs), err)
 	}
 	if err := pancake.GenerateManifest(raw.(pancake.K8STemplate), path.Join(manifestsDir, "k8s-templates")); err != nil {
-		return err
+		return fmt.Errorf("generate manifests: %s", err)
 	}
 
 	log.Println("manifest generated")

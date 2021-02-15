@@ -1,6 +1,7 @@
 package get_manifests
 
 import (
+	"fmt"
 	"github.com/urfave/cli"
 	"log"
 	"pancake/internal"
@@ -25,7 +26,7 @@ func Init(flags []cli.Flag) cli.Command{
 // --- >
 func run(ctx *cli.Context) error {
 	if err := internal.PullManifestTemplates(ctx.String(flagPath)); err != nil {
-		return err
+		return fmt.Errorf("pull k8s manifests templates from '%s': %s", ctx.String(flagPath), err)
 	}
 
 	log.Println("templates saved in ", ctx.String(flagPath))
