@@ -15,7 +15,9 @@ Application endpoint.
 	Options:
 		--skip-update:  bool flag, if set: skipping update process
 	Commands:
-		template: generate yaml format template for manual filling
+		template:       generate yaml format template for manual filling
+		manifest:       generate k8s manifests from template
+		get-manifests:  download manifests templates to local
 */
 
 var Version   = "v0.0.1" // -ldflags change on build (set value from CI/CD tag)

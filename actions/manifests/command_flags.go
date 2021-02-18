@@ -9,6 +9,7 @@ import "github.com/urfave/cli"
 const (
 	flagConfigs = "configs"
 	flagStdOut  = "stdout"
+	flagStage   = "stage"
 	flagPath    = "path"
 	flagFile    = "file"
 )
@@ -31,6 +32,12 @@ func commandFlags() []cli.Flag {
 			Name:        flagStdOut,
 			EnvVar:      "TEMPLATE_STDOUT",
 			Usage:       "output configs to stdout",
+		},
+		cli.StringFlag{
+			Name:        flagStage,
+			EnvVar:      "TEMPLATE_STAGE",
+			Usage:       "choose manifests stage",
+			Required:    true,
 		},
 	}
 }

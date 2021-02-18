@@ -54,6 +54,8 @@ func run(ctx *cli.Context) error {
 		return fmt.Errorf("yaml configs '%s': %s", ctx.String(flagConfigs), err)
 	}
 
+	pancake.Validate(raw.(pancake.K8STemplate))
+
 	manifests, err := pancake.GenerateManifest(raw.(pancake.K8STemplate), path.Join(manifestsDir, "k8s-templates"))
 	if err != nil {
 		return fmt.Errorf("generate manifests: %s", err)

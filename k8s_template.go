@@ -1,6 +1,7 @@
 package pancake
 
 import (
+	"fmt"
 	"os/user"
 )
 
@@ -12,8 +13,36 @@ k8s template data generator.
 		(use named channels for each field of K8STemplate struct)
 */
 
+const (
+	confMaintainer = "<service_maintainer>"
+	confDepartment = "<service_department>"
+	confNamespace  = "<service_namespace>"
+
+	confAppName           = "<app_name>"
+	confAppType           = "{deploy/cronjob/ds/etc}"
+	confAppVersioningBy   = "{tag/commit_hash}"
+	confAppPostStart      = "<post-start_action>"
+	confAppPreStop        = "<pre-stop_action>"
+	confAppAffinity       = "<affinity>"
+	confAppMaxSurge       = "<max_surge_percentage>"
+	confAppMaxUnavailable = "<max_unavailable_percentage>"
+	confAppReplicasNum    = "<replicas_num>"
+	confAppInitContainers = "<init_list_actions>"
+	confAppSideContainers = "<side_list_actions>"
+
+	confLimitCpu = "<cpu_time_pod_limit>"
+	confLimitGpu = "<gpu_time_pod_limit>"
+	confLimitMem = "<mem_pod_limit>"
+
+	confFirewallGroup         = "<group_name>"
+	confFirewallService       = "<k8s_pod_service>"
+	confFirewallMask          = "<ip_mask>"
+	confFirewallPortsPort     = "<port>"
+	confFirewallPortsProtocol = "<protocol>"
+)
+
 type K8STemplate struct {
-	Maintainer   string `yaml:"maintainer" json:"maintainer"`
+	Maintainer   string `yaml:"maintainer"`
 	Department   string `yaml:"department"`
 	Namespace    string `yaml:"namespace"`
 
@@ -58,10 +87,44 @@ type Ports struct {
 }
 
 // -- >
+func Validate(data K8STemplate) {
+	f := make(chan string, 2)
+	go data.__validateNamespace__(f)
+	go data.__validateDepartment__(f)
+	go data.__validateMaintainer__(f)
+	go data.__validateServiceName__(f)
+	go data.__validateServiceType__(f)
+	go data.__validateVersioningBy__(f)
+	go data.__validateServiceReplicas(f)
+	go data.__validateServiceInitContainers__(f)
+	go data.__validateServiceSideContainers__(f)
+	go data.__validateMaxSurge__(f)
+	go data.__validateMaxUnavailable__(f)
+	go data.__validateServiceAffinity__(f)
+	go data.__validatePostStart__(f)
+	go data.__validatePreStop__(f)
+	go data.__validateServiceLimits__(f)
+	go data.__validateServiceEgress__(f)
+	go data.__validateServiceIngress__(f)
+
+	for {
+		if len(f) == 2 {
+			close(f)
+			for i := range f {
+				fmt.Println(i)
+			}
+			fmt.Println("asd")
+
+			return
+		}
+	}
+
+}
+
 func GenerateTemplateObject(appsCount int) K8STemplate {
 	wait := make(chan struct{}, 1)
 
-	wait <- struct{}{}
+	wait <-struct{}{}
 	go __templateServiceIngress__()
 	go __templateServiceEgress__()
 	go __templateServiceLimits__()
@@ -79,6 +142,7 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 	go __templateMaintainer__()
 	go __templateDepartment__()
 	go __templateNamespace__()
+
 	<-wait
 
 	close(wait)
@@ -108,6 +172,7 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 	return K8STemplate{
 		Maintainer:   <-chTemplateMaintainer,
 		Department:   <-chTemplateDepartment,
+		Namespace:    <-chTemplateNamespace,
 
 		Applications: apps,
 	}
@@ -122,13 +187,13 @@ var chTemplateServiceIngress = make(chan []Firewall)
 func __templateServiceIngress__() {
 	chTemplateServiceIngress <- []Firewall{
 		{
-			Group:   "[string] Set group name",
-			Service: "[string][exclude mask] Set k8s pod service",
-			Mask:    "[string][exclude pod] Set group ip mask",
+			Group:   confFirewallGroup,
+			Service: confFirewallService,
+			Mask:    confFirewallMask,
 			Ports:   []Ports{
 				{
-					Protocol: "Set protocol",
-					Port:     "Set port",
+					Protocol: confFirewallPortsProtocol,
+					Port:     confFirewallPortsPort,
 				},
 			},
 		},
@@ -141,13 +206,13 @@ var chTemplateServiceEgress = make(chan []Firewall)
 func __templateServiceEgress__() {
 	chTemplateServiceEgress <- []Firewall{
 		{
-			Group:   "[string] Set group name",
-			Service: "[string][exclude mask] Set k8s pod service",
-			Mask:    "[string][exclude pod] Set group ip mask",
+			Group:   confFirewallGroup,
+			Service: confFirewallService,
+			Mask:    confFirewallMask,
 			Ports:   []Ports{
 				{
-					Protocol: "Set protocol",
-					Port:     "Set port",
+					Protocol: confFirewallPortsProtocol,
+					Port:     confFirewallPortsPort,
 				},
 			},
 		},
@@ -159,85 +224,87 @@ func __templateServiceEgress__() {
 var chTemplateServiceLimits = make(chan Limit)
 func __templateServiceLimits__() {
 	chTemplateServiceLimits <- Limit{
-		Cpu: "[string] Set processor time pod limit",
-		Mem: "[string] Set memory pod limit",
-		Gpu: "[string] Set gpu time pod limit",
+		Cpu: confLimitCpu,
+		Mem: confLimitMem,
+		Gpu: confLimitGpu,
 	}
+	defer close(chTemplateServiceLimits)
 }
 
 //
 var chTemplateServiceAffinity = make(chan string)
 func __templateServiceAffinity__() {
-	chTemplateServiceAffinity <-"[choice] Set { much/less }"
+	chTemplateServiceAffinity <-confAppAffinity
 	defer close(chTemplateServiceAffinity)
 }
 
 //
 var chTemplateServicePreStop = make(chan string)
 func __templateServicePreStop__() {
-	chTemplateServicePreStop <-"[string] Set pre stop actions"
+	chTemplateServicePreStop <-confAppPreStop
 	defer close(chTemplateServicePreStop)
 }
 
 //
 var chTemplateServicePostStart = make(chan string)
 func __templateServicePostStart__() {
-	chTemplateServicePostStart <-"[string] Set post start actions"
+	chTemplateServicePostStart <-confAppPostStart
 	defer close(chTemplateServicePostStart)
 }
 
 //
 var chTemplateServiceMaxUnavailable = make(chan string)
 func __templateServiceMaxUnavailable__() {
-	chTemplateServiceMaxUnavailable <-"[string] Set percentage of max unavailable"
+	chTemplateServiceMaxUnavailable <-confAppMaxUnavailable
+	defer close(chTemplateServiceMaxUnavailable)
 }
 
 //
 var chTemplateServiceMaxSurge = make(chan string)
 func __templateServiceMaxSurge__() {
-	chTemplateServiceMaxSurge <-"[string] Set percentage of max surge"
+	chTemplateServiceMaxSurge <-confAppMaxSurge
 	defer close(chTemplateServiceMaxSurge)
 }
 
 //
 var chTemplateServiceSideContainers = make(chan []string)
 func __templateServiceSideContainers__() {
-	chTemplateServiceSideContainers <-[]string{"[slice] Set side actions containers"}
+	chTemplateServiceSideContainers <-[]string{confAppSideContainers}
 	defer close(chTemplateServiceSideContainers)
 }
 
 //
 var chTemplateServiceInitContainers = make(chan []string)
 func __templateServiceInitContainers__() {
-	chTemplateServiceInitContainers <-[]string{"[slice] Set init actions containers"}
+	chTemplateServiceInitContainers <-[]string{confAppInitContainers}
 	defer close(chTemplateServiceInitContainers)
 }
 
 //
 var chTemplateServiceReplicas = make(chan string)
 func __templateServiceReplicas__() {
-	chTemplateServiceReplicas <-"[string] Set num of service replicas count"
+	chTemplateServiceReplicas <-confAppReplicasNum
 	defer close(chTemplateServiceReplicas)
 }
 
 //
 var chTemplateVersioningBy = make(chan string)
 func __templateVersioningBy__() {
-	chTemplateVersioningBy <-"[choice] Set { tag/commit_hash }"
+	chTemplateVersioningBy <-confAppVersioningBy
 	defer close(chTemplateVersioningBy)
 }
 
 //
 var chTemplateServiceType = make(chan string)
 func __templateServiceType__() {
-	chTemplateServiceType <-"[choice] Set { deploy/cronjob/ds/etc }"
+	chTemplateServiceType <-confAppType
 	defer close(chTemplateServiceType)
 }
 
 //
 var chTemplateServiceName = make(chan string)
 func __templateServiceName__() {
-	chTemplateServiceName <-"[string] Set name of service"
+	chTemplateServiceName <-confAppName
 	defer close(chTemplateServiceName)
 }
 
@@ -245,7 +312,7 @@ func __templateServiceName__() {
 var chTemplateMaintainer = make(chan string)
 func __templateMaintainer__() {
 	if currentUser, err := user.Current(); err != nil {
-		chTemplateMaintainer <-"[string] Set user who maintain service"
+		chTemplateMaintainer <-confMaintainer
 	} else {
 		chTemplateMaintainer <-currentUser.Username
 	}
@@ -255,13 +322,167 @@ func __templateMaintainer__() {
 //
 var chTemplateDepartment = make(chan string)
 func __templateDepartment__() {
-	chTemplateDepartment <-"[string] Set department witch service belong"
+	chTemplateDepartment <-confDepartment
 	defer close(chTemplateDepartment)
 }
 
 //
 var chTemplateNamespace = make(chan string)
 func __templateNamespace__() {
-	chTemplateNamespace <-"[string] Set namespace"
+	chTemplateNamespace <-confNamespace
 	defer close(chTemplateNamespace)
+}
+
+/*
+	Internal async functions for validate template values
+*/
+
+func (k K8STemplate) __validateMaintainer__(ch chan<- string) {
+	if k.Maintainer == confMaintainer {
+		ch <-"required value: namespace not filled"
+	}
+}
+
+func (k K8STemplate) __validateNamespace__(ch chan<- string) {
+	if k.Namespace == confNamespace {
+		ch <-"required value: namespace not filled"
+	}
+}
+
+func (k K8STemplate) __validateDepartment__(ch chan<- string) {
+	if k.Department == confDepartment {
+		ch <-"required value: department not filled"
+	}
+}
+
+func (k K8STemplate) __validateServiceName__(ch chan<- string) {
+	for _, app := range k.Applications {
+		if app.Name == confAppName {
+			ch <-"required value: app name not filled"
+		}
+	}
+}
+
+func (k K8STemplate) __validateServiceType__(ch chan<- string) {
+	for _, app := range k.Applications {
+		if app.Type == confAppType {
+			ch <-"required value: app type not filled"
+		}
+	}
+}
+
+func (k K8STemplate) __validateVersioningBy__(ch chan<- string) {
+	for _, app := range k.Applications {
+		if app.VersioningBy == confAppVersioningBy {
+			ch <-"required value: app versioningBy not filled"
+		}
+	}
+}
+
+func (k K8STemplate) __validateServiceReplicas(ch chan<- string) {
+	for _, app := range k.Applications {
+		if app.ReplicasNum == confAppReplicasNum {
+			ch <-"required value: app replicas not filled"
+		}
+	}
+}
+
+func (k K8STemplate) __validateServiceInitContainers__(ch chan<- string) {
+	for _, app := range k.Applications {
+		if len(app.InitContainers) > 0 {
+			if app.InitContainers[0] == confAppInitContainers {
+				ch <-"required value: app initContainers not filled"
+			}
+		}
+	}
+}
+
+func (k K8STemplate) __validateServiceSideContainers__(ch chan<- string) {
+	for _, app := range k.Applications {
+		if len(app.SideContainers) > 0 {
+			if app.SideContainers[0] == confAppSideContainers {
+				ch <-"required value: app sideContainers not filled"
+			}
+		}
+	}
+}
+
+func (k K8STemplate) __validateMaxSurge__(ch chan<- string) {
+	for _, app := range k.Applications {
+		if app.MaxSurge == confAppMaxSurge {
+			ch <-"required value: app maxSurge not filled"
+		}
+	}
+}
+
+func (k K8STemplate) __validateMaxUnavailable__(ch chan<- string) {
+	for _, app := range k.Applications {
+		if app.MaxUnavailable == confAppMaxUnavailable {
+			ch <-"required value: app MaxUnavailable not filled"
+		}
+	}
+}
+
+func (k K8STemplate) __validatePostStart__(ch chan<- string) {
+	for _, app := range k.Applications {
+		if app.PostStart == confAppPostStart {
+			ch <-"required value: app AppPostStart not filled"
+		}
+	}
+}
+
+func (k K8STemplate) __validatePreStop__(ch chan<- string) {
+	for _, app := range k.Applications {
+		if app.PreStop == confAppPreStop {
+			ch <-"required value: app AppPreStop not filled"
+		}
+	}
+}
+
+func (k K8STemplate) __validateServiceAffinity__(ch chan<- string) {
+	for _, app := range k.Applications {
+		if app.Affinity == confAppAffinity {
+			ch <-"required value: app confAppAffinity not filled"
+		}
+	}
+}
+
+func (k K8STemplate) __validateServiceLimits__(ch chan<- string) {
+	for _, app := range k.Applications {
+		var errMsg string
+
+		if app.Limit.Cpu == confLimitCpu {
+			errMsg += "required value: app cpu not filled"
+		}
+		if app.Limit.Gpu == confLimitGpu {
+			errMsg += "required value: app gpu not filled"
+		}
+		if app.Limit.Mem == confLimitMem {
+			errMsg += "required value: app mem not filled"
+		}
+
+		ch <-errMsg
+
+	}
+}
+
+
+func (k K8STemplate) __validateServiceEgress__(ch chan<- string) {
+	for _, app := range k.Applications {
+
+
+		for _, _ = range app.Egress {
+			///
+		}
+	}
+	ch <-""
+}
+
+func (k K8STemplate) __validateServiceIngress__(ch chan<- string) {
+	for _, app := range k.Applications {
+		for _, _ = range app.Ingress {
+			///
+		}
+	}
+	ch <-""
 }

@@ -6,3 +6,6 @@ package globals
 
 const ManifestGitHTTPS = "https://github.com/mr-chelyshkin/k8s-templates.git"
 const AppSlug = "mr-chelyshkin/pancake"
+
+// https://confluence.mail.ru/pages/viewpage.action?pageId=634152056
+// https://confluence.mail.ru/pages/viewpage.action?pageId=634128176
