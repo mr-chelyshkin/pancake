@@ -87,41 +87,6 @@ type Ports struct {
 }
 
 // -- >
-func Validate(data K8STemplate) {
-	chErrMsg := make(chan string, 17)
-
-	go data.__validateNamespace__(chErrMsg)
-	go data.__validateDepartment__(chErrMsg)
-	go data.__validateMaintainer__(chErrMsg)
-	go data.__validateServiceName__(chErrMsg)
-	go data.__validateServiceType__(chErrMsg)
-	go data.__validateVersioningBy__(chErrMsg)
-	go data.__validateServiceReplicas(chErrMsg)
-	go data.__validateServiceInitContainers__(chErrMsg)
-	go data.__validateServiceSideContainers__(chErrMsg)
-	go data.__validateMaxSurge__(chErrMsg)
-	go data.__validateMaxUnavailable__(chErrMsg)
-	go data.__validateServiceAffinity__(chErrMsg)
-	go data.__validatePostStart__(chErrMsg)
-	go data.__validatePreStop__(chErrMsg)
-	go data.__validateServiceLimits__(chErrMsg)
-	go data.__validateServiceEgress__(chErrMsg)
-	go data.__validateServiceIngress__(chErrMsg)
-
-	for {
-		if len(chErrMsg) == 17 {
-			close(chErrMsg)
-			for i := range chErrMsg {
-				fmt.Println(i)
-			}
-			fmt.Println("asd")
-
-			return
-		}
-	}
-
-}
-
 func GenerateTemplateObject(appsCount int) K8STemplate {
 	wait := make(chan struct{}, 1)
 	defer close(wait)
@@ -175,6 +140,40 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 		Namespace:    <-chTemplateNamespace,
 
 		Applications: apps,
+	}
+}
+
+func Validate(data K8STemplate) {
+	chErrMsg := make(chan string, 17)
+
+	go data.__validateNamespace__(chErrMsg)
+	go data.__validateDepartment__(chErrMsg)
+	go data.__validateMaintainer__(chErrMsg)
+	go data.__validateServiceName__(chErrMsg)
+	go data.__validateServiceType__(chErrMsg)
+	go data.__validateVersioningBy__(chErrMsg)
+	go data.__validateServiceReplicas(chErrMsg)
+	go data.__validateServiceInitContainers__(chErrMsg)
+	go data.__validateServiceSideContainers__(chErrMsg)
+	go data.__validateMaxSurge__(chErrMsg)
+	go data.__validateMaxUnavailable__(chErrMsg)
+	go data.__validateServiceAffinity__(chErrMsg)
+	go data.__validatePostStart__(chErrMsg)
+	go data.__validatePreStop__(chErrMsg)
+	go data.__validateServiceLimits__(chErrMsg)
+	go data.__validateServiceEgress__(chErrMsg)
+	go data.__validateServiceIngress__(chErrMsg)
+
+	for {
+		if len(chErrMsg) == 17 {
+			close(chErrMsg)
+			for i := range chErrMsg {
+				fmt.Println(i)
+			}
+			fmt.Println("asd")
+
+			return
+		}
 	}
 }
 
