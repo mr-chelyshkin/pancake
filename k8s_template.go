@@ -11,6 +11,9 @@ k8s template data generator.
 	GenerateTemplateObject():
 		async collect K8STemplate struct fields data by internals funcs.
 		(use named channels for each field of K8STemplate struct)
+
+	Validate():
+		async K8STemplate data validation by internals funcs.
 */
 
 const (
@@ -143,9 +146,15 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 	}
 }
 
-func Validate(data K8STemplate) {
-	chErrMsg := make(chan string, 17)
+func Validate(data K8STemplate) error {
+	// !IMPORTANT: chBuf = count of concurrency validate functions
+	// otherwise function will be wait channels or close early
+	var chBuf = 17
 
+	chErrMsg := make(chan string, chBuf)
+
+	// -- >
+	// 17 concurrency validate functions
 	go data.__validateNamespace__(chErrMsg)
 	go data.__validateDepartment__(chErrMsg)
 	go data.__validateMaintainer__(chErrMsg)
@@ -163,16 +172,19 @@ func Validate(data K8STemplate) {
 	go data.__validateServiceLimits__(chErrMsg)
 	go data.__validateServiceEgress__(chErrMsg)
 	go data.__validateServiceIngress__(chErrMsg)
+	// -- >
 
 	for {
-		if len(chErrMsg) == 17 {
+		if len(chErrMsg) == chBuf {
 			close(chErrMsg)
-			for i := range chErrMsg {
-				fmt.Println(i)
-			}
-			fmt.Println("asd")
+			var msg string
 
-			return
+			for chOut := range chErrMsg {
+				if chOut != "" {
+					msg += chOut
+				}
+			}
+			return fmt.Errorf("config validation errors: %s", msg)
 		}
 	}
 }
