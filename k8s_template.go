@@ -55,16 +55,16 @@ type K8STemplate struct {
 type Application struct {
 	Name           string    `yaml:"name"`
 	Type           string    `yaml:"type"`
-	VersioningBy   string    `yaml:"versioningBy"`
-	PostStart      string    `yaml:"postStart,omitempty"`
-	PreStop        string    `yaml:"preStop,omitempty"`
+	VersioningBy   string    `yaml:"versioning_by"`
+	PostStart      string    `yaml:"post_start,omitempty"`
+	PreStop        string    `yaml:"pre_stop,omitempty"`
 	Liveness       string    `yaml:"liveness,omitempty"`
 	Affinity       string    `yaml:"affinity,omitempty"`
-	MaxSurge       string    `yaml:"maxSurge,omitempty"`
-	MaxUnavailable string    `yaml:"maxUnavailable,omitempty"`
-	ReplicasNum    string    `yaml:"replicasNum,omitempty"`
-	InitContainers []string  `yaml:"initContainers,omitempty"`
-	SideContainers []string  `yaml:"sideContainers,omitempty"`
+	MaxSurge       string    `yaml:"max_surge,omitempty"`
+	MaxUnavailable string    `yaml:"max_unavailable,omitempty"`
+	ReplicasNum    string    `yaml:"replicas_num,omitempty"`
+	InitContainers []string  `yaml:"init_containers,omitempty"`
+	SideContainers []string  `yaml:"side_containers,omitempty"`
 
 	Limit         Limit      `yaml:"limit"`
 	Ingress       []Firewall `yaml:"ingress,omitempty"`
@@ -184,7 +184,7 @@ func Validate(data K8STemplate) error {
 					msg += chOut
 				}
 			}
-			return fmt.Errorf("config validation errors: %s", msg)
+			return fmt.Errorf("config validation errors:\n%s", msg)
 		}
 	}
 }
@@ -350,7 +350,7 @@ func __templateNamespace__() {
 
 func (k K8STemplate) __validateMaintainer__(ch chan<- string) {
 	if k.Maintainer == confMaintainer {
-		ch <-"required value: namespace not filled"
+		ch <-"[ maintainer ] is empty"
 		return
 	}
 
@@ -360,7 +360,7 @@ func (k K8STemplate) __validateMaintainer__(ch chan<- string) {
 
 func (k K8STemplate) __validateNamespace__(ch chan<- string) {
 	if k.Namespace == confNamespace {
-		ch <-"required value: namespace not filled"
+		ch <-"[ namespcae ] is empty\n"
 		return
 	}
 
@@ -370,7 +370,7 @@ func (k K8STemplate) __validateNamespace__(ch chan<- string) {
 
 func (k K8STemplate) __validateDepartment__(ch chan<- string) {
 	if k.Department == confDepartment {
-		ch <-"required value: department not filled"
+		ch <-"[ department ] is empty\n"
 		return
 	}
 
@@ -383,7 +383,7 @@ func (k K8STemplate) __validateServiceName__(ch chan<- string) {
 
 	for _, app := range k.Applications {
 		if app.Name == confAppName {
-			msg += "required value: app name not filled"
+			msg += "[ -app:name ] is empty\n"
 		}
 	}
 
@@ -396,7 +396,7 @@ func (k K8STemplate) __validateServiceType__(ch chan<- string) {
 
 	for _, app := range k.Applications {
 		if app.Type == confAppType {
-			msg += "required value: app type not filled"
+			msg += "[ -app:type ] is empty\n"
 		}
 	}
 
@@ -409,7 +409,7 @@ func (k K8STemplate) __validateVersioningBy__(ch chan<- string) {
 
 	for _, app := range k.Applications {
 		if app.VersioningBy == confAppVersioningBy {
-			msg += "required value: app versioningBy not filled"
+			msg += "[ -app:versioning_by ] is empty\n"
 		}
 	}
 
@@ -422,7 +422,7 @@ func (k K8STemplate) __validateServiceReplicas(ch chan<- string) {
 
 	for _, app := range k.Applications {
 		if app.ReplicasNum == confAppReplicasNum {
-			msg += "required value: app replicas not filled"
+			msg += "[ -app:replicas ] is empty\n"
 		}
 	}
 
@@ -436,7 +436,7 @@ func (k K8STemplate) __validateServiceInitContainers__(ch chan<- string) {
 	for _, app := range k.Applications {
 		if len(app.InitContainers) > 0 {
 			if app.InitContainers[0] == confAppInitContainers {
-				msg += "required value: app initContainers not filled"
+				msg += "[ -app:init_containers ] is empty\n"
 			}
 		}
 	}
@@ -451,7 +451,7 @@ func (k K8STemplate) __validateServiceSideContainers__(ch chan<- string) {
 	for _, app := range k.Applications {
 		if len(app.SideContainers) > 0 {
 			if app.SideContainers[0] == confAppSideContainers {
-				msg += "required value: app sideContainers not filled"
+				msg += "[ -app:side_containers ] is empty\n"
 			}
 		}
 	}
@@ -465,7 +465,7 @@ func (k K8STemplate) __validateMaxSurge__(ch chan<- string) {
 
 	for _, app := range k.Applications {
 		if app.MaxSurge == confAppMaxSurge {
-			msg += "required value: app maxSurge not filled"
+			msg += "[ -app:max_curge ] is empty\n"
 		}
 	}
 
@@ -478,7 +478,7 @@ func (k K8STemplate) __validateMaxUnavailable__(ch chan<- string) {
 
 	for _, app := range k.Applications {
 		if app.MaxUnavailable == confAppMaxUnavailable {
-			msg += "required value: app MaxUnavailable not filled"
+			msg += "[ -app:max_unavailable ] is empty\n"
 		}
 	}
 
@@ -491,7 +491,7 @@ func (k K8STemplate) __validatePostStart__(ch chan<- string) {
 
 	for _, app := range k.Applications {
 		if app.PostStart == confAppPostStart {
-			msg += "required value: app AppPostStart not filled"
+			msg += "[ -app:post_start ] is empty\n"
 		}
 	}
 
@@ -504,7 +504,7 @@ func (k K8STemplate) __validatePreStop__(ch chan<- string) {
 
 	for _, app := range k.Applications {
 		if app.PreStop == confAppPreStop {
-			msg += "required value: app AppPreStop not filled"
+			msg += "[ -app:pre_stop ] is empty\n"
 		}
 	}
 
@@ -517,7 +517,7 @@ func (k K8STemplate) __validateServiceAffinity__(ch chan<- string) {
 
 	for _, app := range k.Applications {
 		if app.Affinity == confAppAffinity {
-			msg += "required value: app confAppAffinity not filled"
+			msg += "[ -app:affinity ] is empty\n"
 		}
 	}
 
@@ -530,13 +530,13 @@ func (k K8STemplate) __validateServiceLimits__(ch chan<- string) {
 
 	for _, app := range k.Applications {
 		if app.Limit.Cpu == confLimitCpu {
-			msg += "required value: app cpu not filled"
+			msg += "[ -app:limit:cpu ] is empty\n"
 		}
 		if app.Limit.Gpu == confLimitGpu {
-			msg += "required value: app gpu not filled"
+			msg += "[ -app:limit:gpu ] is empty\n"
 		}
 		if app.Limit.Mem == confLimitMem {
-			msg += "required value: app mem not filled"
+			msg += "[ -app:limit:mem ] is empty\n"
 		}
 	}
 
