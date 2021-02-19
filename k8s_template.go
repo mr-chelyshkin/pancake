@@ -23,8 +23,8 @@ const (
 	confNamespace  = "<service_namespace>"
 
 	confAppName           = "<app_name>"
-	confAppType           = "{deploy/cronjob/ds/etc}"
-	confAppVersioningBy   = "{tag/commit_hash}"
+	confAppType           = "<deploy/cronjob/ds/etc>"
+	confAppVersioningBy   = "<tag/commit_hash>"
 	confAppPostStart      = "<post-start_action>"
 	confAppPreStop        = "<pre-stop_action>"
 	confAppAffinity       = "<affinity>"
@@ -67,9 +67,9 @@ type Application struct {
 	InitContainers []string  `yaml:"init_containers, omitempty"`
 	SideContainers []string  `yaml:"side_containers, omitempty"`
 
-	Limit         Limit      `yaml:"limit"`
-	Ingress       []Firewall `yaml:"ingress, omitempty"`
-	Egress        []Firewall `yaml:"egress,  omitempty"`
+	Limit    Limit      `yaml:"limit"`
+	Ingress  []Firewall `yaml:"ingress, omitempty"`
+	Egress   []Firewall `yaml:"egress,  omitempty"`
 }
 
 type Limit struct {
@@ -414,7 +414,7 @@ func (k K8STemplate) __validateVersioningBy__(ch chan<- string) {
 	var msg string
 
 	for _, app := range k.Applications {
-		if app.VersioningBy == confAppVersioningBy || app.VersioningBy == "" {
+		if app.VersioningBy == confAppVersioningBy {
 			msg += "[ -app:versioning_by ] is empty\n"
 			continue
 		}
