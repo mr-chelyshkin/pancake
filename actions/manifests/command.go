@@ -64,6 +64,11 @@ func run(ctx *cli.Context) error {
 	}
 	// -- >
 
+
+
+
+
+
 	if ctx.Bool(flagStdOut) {
 		fmt.Println(strings.Join(manifests, "\n"))
 	} else {

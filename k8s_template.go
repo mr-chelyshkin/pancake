@@ -3,7 +3,7 @@ package pancake
 import (
 	"fmt"
 	"os/user"
-	"regexp"
+	"strconv"
 )
 
 /*
@@ -352,6 +352,7 @@ func __templateNamespace__() {
 	Internal async functions for validate template values
 */
 
+//
 func (k K8STemplate) __validateMaintainer__(ch chan<- string) {
 	if k.Maintainer == confMaintainer || k.Maintainer == "" {
 		ch <-"[ maintainer ] is empty"
@@ -362,9 +363,10 @@ func (k K8STemplate) __validateMaintainer__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateNamespace__(ch chan<- string) {
 	if k.Namespace == confNamespace || k.Namespace == "" {
-		ch <-"[ namespcae ] is empty\n"
+		ch <-"[ namespace ] is empty\n"
 		return
 	}
 
@@ -372,6 +374,7 @@ func (k K8STemplate) __validateNamespace__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateDepartment__(ch chan<- string) {
 	if k.Department == confDepartment || k.Department == "" {
 		ch <-"[ department ] is empty\n"
@@ -382,6 +385,7 @@ func (k K8STemplate) __validateDepartment__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateServiceName__(ch chan<- string) {
 	var msg string
 
@@ -396,6 +400,7 @@ func (k K8STemplate) __validateServiceName__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateServiceType__(ch chan<- string) {
 	var msg string
 
@@ -410,6 +415,7 @@ func (k K8STemplate) __validateServiceType__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateVersioningBy__(ch chan<- string) {
 	var msg string
 
@@ -419,7 +425,7 @@ func (k K8STemplate) __validateVersioningBy__(ch chan<- string) {
 			continue
 		}
 		if app.VersioningBy != "tag" && app.VersioningBy != "hash" {
-			msg += "[ -app:versioning_by ] should be 'tag' or 'hash'"
+			msg += "[ -app:versioning_by ] should be 'tag' or 'hash'\n"
 			continue
 		}
 	}
@@ -428,6 +434,7 @@ func (k K8STemplate) __validateVersioningBy__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateServiceReplicas(ch chan<- string) {
 	var msg string
 
@@ -436,9 +443,8 @@ func (k K8STemplate) __validateServiceReplicas(ch chan<- string) {
 			msg += "[ -app:replicas ] is empty\n"
 			continue
 		}
-		if math, _ := regexp.MatchString(`0-9+$`, app.ReplicasNum); !math {
+		if _, err := strconv.Atoi(app.ReplicasNum); err != nil {
 			msg += "[ -app:replicas ] has invalid chars (should be int)\n"
-			continue
 		}
 	}
 
@@ -446,6 +452,7 @@ func (k K8STemplate) __validateServiceReplicas(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateServiceInitContainers__(ch chan<- string) {
 	var msg string
 
@@ -462,6 +469,7 @@ func (k K8STemplate) __validateServiceInitContainers__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateServiceSideContainers__(ch chan<- string) {
 	var msg string
 
@@ -478,6 +486,7 @@ func (k K8STemplate) __validateServiceSideContainers__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateMaxSurge__(ch chan<- string) {
 	var msg string
 
@@ -492,6 +501,7 @@ func (k K8STemplate) __validateMaxSurge__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateMaxUnavailable__(ch chan<- string) {
 	var msg string
 
@@ -506,6 +516,7 @@ func (k K8STemplate) __validateMaxUnavailable__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validatePostStart__(ch chan<- string) {
 	var msg string
 
@@ -520,6 +531,7 @@ func (k K8STemplate) __validatePostStart__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validatePreStop__(ch chan<- string) {
 	var msg string
 
@@ -534,6 +546,7 @@ func (k K8STemplate) __validatePreStop__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateServiceAffinity__(ch chan<- string) {
 	var msg string
 
@@ -548,6 +561,7 @@ func (k K8STemplate) __validateServiceAffinity__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateServiceLimits__(ch chan<- string) {
 	var msg string
 
@@ -567,7 +581,7 @@ func (k K8STemplate) __validateServiceLimits__(ch chan<- string) {
 	return
 }
 
-
+//
 func (k K8STemplate) __validateServiceEgress__(ch chan<- string) {
 	var msg string
 
@@ -581,6 +595,7 @@ func (k K8STemplate) __validateServiceEgress__(ch chan<- string) {
 	return
 }
 
+//
 func (k K8STemplate) __validateServiceIngress__(ch chan<- string) {
 	var msg string
 
