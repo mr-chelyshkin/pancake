@@ -54,6 +54,8 @@ func run(ctx *cli.Context) error {
 		return fmt.Errorf("yaml configs '%s': %s", ctx.String(flagConfigs), err)
 	}
 
+	fmt.Println("raw", raw, ctx.String(flagConfigs))
+	fmt.Println()
 	if err := pancake.Validate(raw.(pancake.K8STemplate)); err != nil {
 		return err
 	}
