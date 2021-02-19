@@ -25,9 +25,10 @@ func ReadYaml(filename string, object interface{}) (interface{}, error) {
 	}
 
 	cfg := &mapstructure.DecoderConfig{
-		Metadata: nil,
-		Result:   &object,
-		TagName:  "yaml",
+		Metadata:         nil,
+		Result:           &object,
+		TagName:          "yaml",
+		WeaklyTypedInput: true,
 	}
 	decoder, err := mapstructure.NewDecoder(cfg)
 	if err != nil {

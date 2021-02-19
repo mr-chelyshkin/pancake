@@ -56,20 +56,20 @@ type K8STemplate struct {
 type Application struct {
 	Name           string    `yaml:"name"`
 	Type           string    `yaml:"type"`
+	Affinity       string    `yaml:"affinity"`
+	ReplicasNum    string    `yaml:"replicas_num"`
 	VersioningBy   string    `yaml:"versioning_by"`
-	PostStart      string    `yaml:"post_start,omitempty"`
-	PreStop        string    `yaml:"pre_stop,omitempty"`
-	Liveness       string    `yaml:"liveness,omitempty"`
-	Affinity       string    `yaml:"affinity,omitempty"`
-	MaxSurge       string    `yaml:"max_surge,omitempty"`
-	MaxUnavailable string    `yaml:"max_unavailable,omitempty"`
-	ReplicasNum    string    `yaml:"replicas_num,omitempty"`
-	InitContainers []string  `yaml:"init_containers,omitempty"`
-	SideContainers []string  `yaml:"side_containers,omitempty"`
+	PostStart      string    `yaml:"post_start,      omitempty"`
+	PreStop        string    `yaml:"pre_stop,        omitempty"`
+	Liveness       string    `yaml:"liveness,        omitempty"`
+	MaxSurge       string    `yaml:"max_surge,       omitempty"`
+	MaxUnavailable string    `yaml:"max_unavailable, omitempty"`
+	InitContainers []string  `yaml:"init_containers, omitempty"`
+	SideContainers []string  `yaml:"side_containers, omitempty"`
 
 	Limit         Limit      `yaml:"limit"`
-	Ingress       []Firewall `yaml:"ingress,omitempty"`
-	Egress        []Firewall `yaml:"egress,omitempty"`
+	Ingress       []Firewall `yaml:"ingress, omitempty"`
+	Egress        []Firewall `yaml:"egress,  omitempty"`
 }
 
 type Limit struct {
@@ -150,7 +150,7 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 func Validate(data K8STemplate) error {
 	// !IMPORTANT: chBuf = count of concurrency validate functions
 	// otherwise function will be wait channels or close early
-	var chBuf = 7
+	var chBuf = 17
 
 	chErrMsg := make(chan string, chBuf)
 
@@ -163,16 +163,16 @@ func Validate(data K8STemplate) error {
 	go data.__validateServiceType__(chErrMsg)
 	go data.__validateVersioningBy__(chErrMsg)
 	go data.__validateServiceReplicas(chErrMsg)
-	//go data.__validateServiceInitContainers__(chErrMsg)
-	//go data.__validateServiceSideContainers__(chErrMsg)
-	//go data.__validateMaxSurge__(chErrMsg)
-	//go data.__validateMaxUnavailable__(chErrMsg)
-	//go data.__validateServiceAffinity__(chErrMsg)
-	//go data.__validatePostStart__(chErrMsg)
-	//go data.__validatePreStop__(chErrMsg)
-	//go data.__validateServiceLimits__(chErrMsg)
-	//go data.__validateServiceEgress__(chErrMsg)
-	//go data.__validateServiceIngress__(chErrMsg)
+	go data.__validateServiceInitContainers__(chErrMsg)
+	go data.__validateServiceSideContainers__(chErrMsg)
+	go data.__validateMaxSurge__(chErrMsg)
+	go data.__validateMaxUnavailable__(chErrMsg)
+	go data.__validateServiceAffinity__(chErrMsg)
+	go data.__validatePostStart__(chErrMsg)
+	go data.__validatePreStop__(chErrMsg)
+	go data.__validateServiceLimits__(chErrMsg)
+	go data.__validateServiceEgress__(chErrMsg)
+	go data.__validateServiceIngress__(chErrMsg)
 	// -- >
 
 	for {
@@ -483,7 +483,7 @@ func (k K8STemplate) __validateMaxSurge__(ch chan<- string) {
 
 	for _, app := range k.Applications {
 		if app.MaxSurge == confAppMaxSurge {
-			msg += "[ -app:max_curge ] is empty\n"
+			msg += "[ -app:max_surge ] is empty\n"
 			continue
 		}
 	}
@@ -538,7 +538,7 @@ func (k K8STemplate) __validateServiceAffinity__(ch chan<- string) {
 	var msg string
 
 	for _, app := range k.Applications {
-		if app.Affinity == confAppAffinity {
+		if app.Affinity == confAppAffinity || app.Affinity == "" {
 			msg += "[ -app:affinity ] is empty\n"
 			continue
 		}
@@ -552,13 +552,13 @@ func (k K8STemplate) __validateServiceLimits__(ch chan<- string) {
 	var msg string
 
 	for _, app := range k.Applications {
-		if app.Limit.Cpu == confLimitCpu {
-			msg += "[ -app:limit:cpu ] is empty\n"
-		}
 		if app.Limit.Gpu == confLimitGpu {
 			msg += "[ -app:limit:gpu ] is empty\n"
 		}
-		if app.Limit.Mem == confLimitMem {
+		if app.Limit.Cpu == confLimitCpu || app.Limit.Cpu == "" {
+			msg += "[ -app:limit:cpu ] is empty\n"
+		}
+		if app.Limit.Mem == confLimitMem || app.Limit.Mem == "" {
 			msg += "[ -app:limit:mem ] is empty\n"
 		}
 	}
