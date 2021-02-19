@@ -115,6 +115,7 @@ func __generateIngress__(manifestsDir, namespace, department, app string, blocks
 	return &data, nil
 }
 
+//
 func __generateEgress__(manifestsDir, namespace, department, app string, blocks []Firewall) (*string, error) {
 	template, err := getTemplatePath(manifestsDir, department, "egress.yaml.j2")
 	if err != nil {

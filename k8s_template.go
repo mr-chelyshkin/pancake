@@ -17,6 +17,7 @@ k8s template data generator.
 		async K8STemplate data validation by internals funcs.
 */
 
+// pre-defined config values
 const (
 	confMaintainer = "<service_maintainer>"
 	confDepartment = "<service_department>"
@@ -139,9 +140,9 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 	}
 
 	return K8STemplate{
-		Maintainer:   <-chTemplateMaintainer,
-		Department:   <-chTemplateDepartment,
-		Namespace:    <-chTemplateNamespace,
+		Maintainer: <-chTemplateMaintainer,
+		Department: <-chTemplateDepartment,
+		Namespace:  <-chTemplateNamespace,
 
 		Applications: apps,
 	}
@@ -151,7 +152,6 @@ func Validate(data K8STemplate) error {
 	// !IMPORTANT: chBuf = count of concurrency validate functions
 	// otherwise function will be wait channels or close early
 	var chBuf = 17
-
 	chErrMsg := make(chan string, chBuf)
 
 	// -- >
@@ -178,8 +178,8 @@ func Validate(data K8STemplate) error {
 	for {
 		if len(chErrMsg) == chBuf {
 			close(chErrMsg)
-			var msg string
 
+			var msg string
 			for chOut := range chErrMsg {
 				if chOut != "" {
 					msg += chOut
@@ -238,7 +238,7 @@ func __templateServiceEgress__() {
 //
 var chTemplateServiceLimits = make(chan Limit)
 func __templateServiceLimits__() {
-	chTemplateServiceLimits <- Limit{
+	chTemplateServiceLimits <-Limit{
 		Cpu: confLimitCpu,
 		Mem: confLimitMem,
 		Gpu: confLimitGpu,
@@ -445,6 +445,7 @@ func (k K8STemplate) __validateServiceReplicas(ch chan<- string) {
 		}
 		if _, err := strconv.Atoi(app.ReplicasNum); err != nil {
 			msg += "[ -app:replicas ] has invalid chars (should be int)\n"
+			continue
 		}
 	}
 

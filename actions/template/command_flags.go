@@ -33,7 +33,7 @@ func commandFlags() []cli.Flag {
 		},
 		cli.BoolFlag{
 			Name:        flagStdOut,
-			EnvVar:      "TEMPLATE_STDOUT",
+			EnvVar:      "CONFIGS_STDOUT",
 			Usage:       "output configs to stdout",
 		},
 	}

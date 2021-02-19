@@ -30,12 +30,12 @@ func commandFlags() []cli.Flag {
 		},
 		cli.BoolFlag{
 			Name:        flagStdOut,
-			EnvVar:      "TEMPLATE_STDOUT",
+			EnvVar:      "MANIFESTS_STDOUT",
 			Usage:       "output configs to stdout",
 		},
 		cli.StringFlag{
 			Name:        flagStage,
-			EnvVar:      "TEMPLATE_STAGE",
+			EnvVar:      "MANIFESTS_STAGE",
 			Usage:       "choose manifests stage",
 			Required:    true,
 		},
