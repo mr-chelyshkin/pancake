@@ -27,35 +27,35 @@ func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) ([]
 			var appManifests string
 			defer wg.Done()
 
-			if app.Ingress != nil {
-				block, err := __generateIngress__(
-					manifestsDir,
-					templateUser.Namespace,
-					templateUser.Department,
-					app.Name,
-					app.Ingress,
-				)
-				if err != nil {
-					goroutineTracker.Kill(err)
-				} else {
-					appManifests += *block
-				}
-			}
+			//if app.Ingress != nil {
+			//	block, err := __generateIngress__(
+			//		manifestsDir,
+			//		templateUser.Namespace,
+			//		templateUser.Department,
+			//		app.Name,
+			//		app.Ingress,
+			//	)
+			//	if err != nil {
+			//		goroutineTracker.Kill(err)
+			//	} else {
+			//		appManifests += *block
+			//	}
+			//}
 
-			if app.Egress != nil {
-				block, err := __generateEgress__(
-					manifestsDir,
-					templateUser.Namespace,
-					templateUser.Department,
-					app.Name,
-					app.Egress,
-				)
-				if err != nil {
-					goroutineTracker.Kill(err)
-				} else {
-					appManifests += *block
-				}
-			}
+			//if app.Egress != nil {
+			//	block, err := __generateEgress__(
+			//		manifestsDir,
+			//		templateUser.Namespace,
+			//		templateUser.Department,
+			//		app.Name,
+			//		app.Egress,
+			//	)
+			//	if err != nil {
+			//		goroutineTracker.Kill(err)
+			//	} else {
+			//		appManifests += *block
+			//	}
+			//}
 
 			manifests <-appManifests
 		}(wg, app, templateManifestsDir)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/user"
 	"strconv"
+	"sync"
 )
 
 /*
@@ -358,7 +359,6 @@ func (k K8STemplate) __validateMaintainer__(ch chan<- string) {
 		ch <-"[ maintainer ] is empty"
 		return
 	}
-
 	ch <-""
 	return
 }
@@ -369,7 +369,6 @@ func (k K8STemplate) __validateNamespace__(ch chan<- string) {
 		ch <-"[ namespace ] is empty\n"
 		return
 	}
-
 	ch <-""
 	return
 }
@@ -380,204 +379,384 @@ func (k K8STemplate) __validateDepartment__(ch chan<- string) {
 		ch <-"[ department ] is empty\n"
 		return
 	}
-
 	ch <-""
 	return
 }
 
 //
 func (k K8STemplate) __validateServiceName__(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
 	for _, app := range k.Applications {
-		if app.Name == confAppName || app.Name == "" {
-			msg += "[ -app:name ] is empty\n"
-			continue
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			if data.Name == confAppName || data.Name == "" {
+				internalCh <-"[ -app:name ] is empty\n"
+				return
+			}
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
 
 //
 func (k K8STemplate) __validateServiceType__(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
+
+	// -- >
 	for _, app := range k.Applications {
-		if app.Type == confAppType || app.Type == "" {
-			msg += "[ -app:type ] is empty\n"
-			continue
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			if data.Type == confAppType || data.Type == "" {
+				internalCh <-"[ -app:type ] is empty\n"
+				return
+			}
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
 
 //
 func (k K8STemplate) __validateVersioningBy__(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
 	for _, app := range k.Applications {
-		if app.VersioningBy == confAppVersioningBy {
-			msg += "[ -app:versioning_by ] is empty\n"
-			continue
-		}
-		if app.VersioningBy != "tag" && app.VersioningBy != "hash" {
-			msg += "[ -app:versioning_by ] should be 'tag' or 'hash'\n"
-			continue
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			if data.VersioningBy == confAppVersioningBy {
+				internalCh <-"[ -app:versioning_by ] is empty\n"
+				return
+			}
+			if data.VersioningBy != "tag" && data.VersioningBy != "hash" {
+				internalCh <-"[ -app:versioning_by ] should be 'tag' or 'hash'\n"
+				return
+			}
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
 
 //
 func (k K8STemplate) __validateServiceReplicas(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
 	for _, app := range k.Applications {
-		if app.ReplicasNum == confAppReplicasNum {
-			msg += "[ -app:replicas ] is empty\n"
-			continue
-		}
-		if _, err := strconv.Atoi(app.ReplicasNum); err != nil {
-			msg += "[ -app:replicas ] has invalid chars (should be int)\n"
-			continue
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			if data.ReplicasNum == confAppReplicasNum {
+				internalCh <-"[ -app:replicas ] is empty\n"
+				return
+			}
+			if _, err := strconv.Atoi(data.ReplicasNum); err != nil {
+				internalCh <-"[ -app:replicas ] has invalid chars (should be int)\n"
+				return
+			}
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
 
 //
 func (k K8STemplate) __validateServiceInitContainers__(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
 	for _, app := range k.Applications {
-		if len(app.InitContainers) > 0 {
-			if app.InitContainers[0] == confAppInitContainers {
-				msg += "[ -app:init_containers ] is empty\n"
-				continue
-			}
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			if len(data.InitContainers) > 0 {
+				if data.InitContainers[0] == confAppInitContainers {
+					internalCh <-"[ -app:init_containers ] is empty\n"
+					return
+				}
+			}
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
 
 //
 func (k K8STemplate) __validateServiceSideContainers__(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
 	for _, app := range k.Applications {
-		if len(app.SideContainers) > 0 {
-			if app.SideContainers[0] == confAppSideContainers {
-				msg += "[ -app:side_containers ] is empty\n"
-				continue
-			}
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			if len(data.SideContainers) > 0 {
+				if data.SideContainers[0] == confAppSideContainers {
+					internalCh <-"[ -app:side_containers ] is empty\n"
+					return
+				}
+			}
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
 
 //
 func (k K8STemplate) __validateMaxSurge__(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
 	for _, app := range k.Applications {
-		if app.MaxSurge == confAppMaxSurge {
-			msg += "[ -app:max_surge ] is empty\n"
-			continue
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			if data.MaxSurge == confAppMaxSurge {
+				internalCh <-"[ -app:max_surge ] is empty\n"
+				return
+			}
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
 
 //
 func (k K8STemplate) __validateMaxUnavailable__(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
 	for _, app := range k.Applications {
-		if app.MaxUnavailable == confAppMaxUnavailable {
-			msg += "[ -app:max_unavailable ] is empty\n"
-			continue
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			if data.MaxUnavailable == confAppMaxUnavailable {
+				internalCh <-"[ -app:max_unavailable ] is empty\n"
+				return
+			}
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
 
 //
 func (k K8STemplate) __validatePostStart__(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
 	for _, app := range k.Applications {
-		if app.PostStart == confAppPostStart {
-			msg += "[ -app:post_start ] is empty\n"
-			continue
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			if data.PostStart == confAppPostStart {
+				internalCh <-"[ -app:post_start ] is empty\n"
+				return
+			}
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
 
 //
 func (k K8STemplate) __validatePreStop__(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
 	for _, app := range k.Applications {
-		if app.PreStop == confAppPreStop {
-			msg += "[ -app:pre_stop ] is empty\n"
-			continue
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			if data.PreStop == confAppPreStop {
+				internalCh <-"[ -app:pre_stop ] is empty\n"
+				return
+			}
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
 
 //
 func (k K8STemplate) __validateServiceAffinity__(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
 	for _, app := range k.Applications {
-		if app.Affinity == confAppAffinity || app.Affinity == "" {
-			msg += "[ -app:affinity ] is empty\n"
-			continue
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			if data.Affinity == confAppAffinity || data.Affinity == "" {
+				internalCh <-"[ -app:affinity ] is empty\n"
+				return
+			}
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
 
 //
 func (k K8STemplate) __validateServiceLimits__(ch chan<- string) {
-	var msg string
+	internalCh := make(chan string, len(k.Applications))
 
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
 	for _, app := range k.Applications {
-		if app.Limit.Gpu == confLimitGpu {
-			msg += "[ -app:limit:gpu ] is empty\n"
-		}
-		if app.Limit.Cpu == confLimitCpu || app.Limit.Cpu == "" {
-			msg += "[ -app:limit:cpu ] is empty\n"
-		}
-		if app.Limit.Mem == confLimitMem || app.Limit.Mem == "" {
-			msg += "[ -app:limit:mem ] is empty\n"
-		}
-	}
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
 
+			var msg string
+			if data.Limit.Gpu == confLimitGpu {
+				msg += "[ -app:limit:gpu ] is empty\n"
+			}
+			if data.Limit.Cpu == confLimitCpu || data.Limit.Cpu == "" {
+				msg += "[ -app:limit:cpu ] is empty\n"
+			}
+			if data.Limit.Mem == confLimitMem || data.Limit.Mem == "" {
+				msg += "[ -app:limit:mem ] is empty\n"
+			}
+			internalCh <-msg
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
 	ch <-msg
 	return
 }
@@ -591,7 +770,6 @@ func (k K8STemplate) __validateServiceEgress__(ch chan<- string) {
 			///
 		}
 	}
-
 	ch <-msg
 	return
 }
@@ -605,7 +783,6 @@ func (k K8STemplate) __validateServiceIngress__(ch chan<- string) {
 			///
 		}
 	}
-
 	ch <-msg
 	return
 }
