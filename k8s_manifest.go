@@ -24,8 +24,22 @@ func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) ([]
 	// -- >
 	for _, app := range templateUser.Applications {
 		go func(wg *sync.WaitGroup, app Application, manifestsDir string) {
-			var appManifests string
 			defer wg.Done()
+
+			template, err := __generate__(
+				manifestsDir,
+				templateUser.Namespace,
+				templateUser.Department,
+				app,
+			)
+			if err != nil {
+				goroutineTracker.Kill(err)
+			} else {
+				fmt.Println(*template)
+			}
+			manifests<-""
+
+			//manifests <-*template
 
 			//if app.Ingress != nil {
 			//	block, err := __generateIngress__(
@@ -41,7 +55,7 @@ func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) ([]
 			//		appManifests += *block
 			//	}
 			//}
-
+			//
 			//if app.Egress != nil {
 			//	block, err := __generateEgress__(
 			//		manifestsDir,
@@ -57,7 +71,7 @@ func GenerateManifest(templateUser K8STemplate, templateManifestsDir string) ([]
 			//	}
 			//}
 
-			manifests <-appManifests
+			//manifests <-appManifests
 		}(wg, app, templateManifestsDir)
 	}
 	// -- >
@@ -96,41 +110,57 @@ func getTemplatePath(manifestsDir, department, filename string) (*string, error)
 */
 
 //
-func __generateIngress__(manifestsDir, namespace, department, app string, blocks []Firewall) (*string, error) {
-	template, err := getTemplatePath(manifestsDir, department, "ingress.yaml.j2")
+func __generate__(manifestsDir, namespace, department string, app Application) (*string, error) {
+	template, err := getTemplatePath(manifestsDir, department, "base.yaml.j2")
 	if err != nil {
-		return nil, fmt.Errorf("ingress block, %s", err)
+		return nil, fmt.Errorf("base block, %s", err)
 	}
-	var data string
 
-	for _, block := range blocks {
-		var tpl = pongo2.Must(pongo2.FromFile(*template))
-
-		out, err := tpl.Execute(pongo2.Context{"item": block, "namespace": namespace, "app": app})
-		if err != nil {
-			return nil, fmt.Errorf("ingress tpl execute, %s", err)
-		}
-		data += out
+	var tpl = pongo2.Must(pongo2.FromFile(*template))
+	out, err := tpl.Execute(pongo2.Context{"namespace": namespace, "app": app})
+	if err != nil {
+		return nil, fmt.Errorf("base tpl execute, %s", err)
 	}
-	return &data, nil
+
+	return &out, nil
 }
 
 //
-func __generateEgress__(manifestsDir, namespace, department, app string, blocks []Firewall) (*string, error) {
-	template, err := getTemplatePath(manifestsDir, department, "egress.yaml.j2")
-	if err != nil {
-		return nil, fmt.Errorf("egress block, %s", err)
-	}
-	var data string
+//func __generateIngress__(manifestsDir, namespace, department, app string, blocks []Firewall) (*string, error) {
+//	template, err := getTemplatePath(manifestsDir, department, "ingress.yaml.j2")
+//	if err != nil {
+//		return nil, fmt.Errorf("ingress block, %s", err)
+//	}
+//	var data string
+//
+//	for _, block := range blocks {
+//		var tpl = pongo2.Must(pongo2.FromFile(*template))
+//
+//		out, err := tpl.Execute(pongo2.Context{"item": block, "namespace": namespace, "app": app})
+//		if err != nil {
+//			return nil, fmt.Errorf("ingress tpl execute, %s", err)
+//		}
+//		data += out
+//	}
+//	return &data, nil
+//}
 
-	for _, block := range blocks {
-		var tpl = pongo2.Must(pongo2.FromFile(*template))
-
-		out, err := tpl.Execute(pongo2.Context{"item": block, "namespace": namespace, "app": app})
-		if err != nil {
-			return nil, fmt.Errorf("egress tpl execute, %s", err)
-		}
-		data += out
-	}
-	return &data, nil
-}
+//
+//func __generateEgress__(manifestsDir, namespace, department, app string, blocks []Firewall) (*string, error) {
+//	template, err := getTemplatePath(manifestsDir, department, "egress.yaml.j2")
+//	if err != nil {
+//		return nil, fmt.Errorf("egress block, %s", err)
+//	}
+//	var data string
+//
+//	for _, block := range blocks {
+//		var tpl = pongo2.Must(pongo2.FromFile(*template))
+//
+//		out, err := tpl.Execute(pongo2.Context{"item": block, "namespace": namespace, "app": app})
+//		if err != nil {
+//			return nil, fmt.Errorf("egress tpl execute, %s", err)
+//		}
+//		data += out
+//	}
+//	return &data, nil
+//}
