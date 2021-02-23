@@ -68,13 +68,18 @@ func run(ctx *cli.Context) error {
 		return fmt.Errorf("generate manifests: %s", err)
 	}
 
-	// -- >
+	// return results
 	if ctx.Bool(flagStdOut) {
 		for _, app := range *manifests {
 			fmt.Println(app)
 		}
 	} else {
-		fmt.Println(*manifests)
+		for name, data := range *manifests {
+			file := path.Join(ctx.String(flagPath), fmt.Sprintf("%s.yaml", name))
+			if err := internal.WriteFile(file, []byte(data)); err != nil {
+				return fmt.Errorf("write manifest to %s, %s", file, err)
+			}
+		}
 	}
 
 	return nil
