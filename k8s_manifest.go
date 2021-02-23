@@ -15,15 +15,17 @@ k8s manifest generator.
 	GenerateManifests():
 		async generate k8s manifests from income config and template patterns (jinja).
 		for work with jinja use: "github.com/flosch/pongo2"
+
+		return map as: [application_name]k8s_manifest.
 */
 
-func GenerateManifests(templateUser K8STemplate, manifestsDir string) (*[]string, error) {
-	var serviceManifests []string
+func GenerateManifests(templateUser K8STemplate, manifestsDir string) (*map[string]string, error) {
+	serviceManifests := make(map[string]string)
 
 	var goroutineTracker tomb.Tomb
 	defer goroutineTracker.Done()
 
-	manifests := make(chan string, len(templateUser.Applications))
+	manifests := make(chan [2]string, len(templateUser.Applications))
 	defer close(manifests)
 
 	wg := &sync.WaitGroup{}
@@ -45,7 +47,7 @@ func GenerateManifests(templateUser K8STemplate, manifestsDir string) (*[]string
 			if err != nil {
 				goroutineTracker.Kill(err)
 			} else {
-				manifests <-*template
+				manifests <-[2]string{app.Name, *template}
 			}
 		}(wg, app, manifestsDir)
 	}
@@ -57,8 +59,9 @@ func GenerateManifests(templateUser K8STemplate, manifestsDir string) (*[]string
 
 	for {
 		select {
+		// app: [2]string array: [app_name, k8s_manifest]
 		case app := <-manifests:
-			serviceManifests = append(serviceManifests, app)
+			serviceManifests[app[0]] = app[1]
 
 			// return if generate all manifests apps from config
 			if len(templateUser.Applications) == len(serviceManifests) {

@@ -9,7 +9,6 @@ import (
 	"pancake/globals"
 	"pancake/internal"
 	"path"
-	"strings"
 )
 
 /*
@@ -71,9 +70,11 @@ func run(ctx *cli.Context) error {
 
 	// -- >
 	if ctx.Bool(flagStdOut) {
-		fmt.Println(strings.Join(*manifests, "\n"))
+		for _, app := range *manifests {
+			fmt.Println(app)
+		}
 	} else {
-		fmt.Println("TO DO: write")
+		fmt.Println(*manifests)
 	}
 
 	return nil
