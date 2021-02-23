@@ -19,14 +19,14 @@ template command.
 func Init(flags []cli.Flag) cli.Command{
 	return cli.Command{
 		Name:   "template",
-		Usage:  "generate yaml format configs for manual filling [used by cli-app for manifiest generating]",
+		Usage:  "generate yaml format configs for manual filling [used by cli-app for manifest generating]",
 
 		Flags:  append(flags, commandFlags()...),
 		Action: func(ctx *cli.Context) error { return run(ctx) },
 	}
 }
 
-// --- >
+// -- >
 func run(ctx *cli.Context) error {
 	template := pancake.GenerateTemplateObject(ctx.Int(flagApps))
 	templateBytes, err := yaml.Marshal(&template)

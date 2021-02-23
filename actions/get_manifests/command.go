@@ -23,7 +23,7 @@ func Init(flags []cli.Flag) cli.Command{
 	}
 }
 
-// --- >
+// -- >
 func run(ctx *cli.Context) error {
 	if err := internal.PullManifestTemplates(ctx.String(flagPath)); err != nil {
 		return fmt.Errorf("pull k8s manifests templates from '%s': %s", ctx.String(flagPath), err)

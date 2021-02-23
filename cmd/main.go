@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"pancake/internal"
+	"time"
 )
 
 /*
@@ -36,9 +37,19 @@ func main() {
 
 	app.Before = func(ctx *cli.Context) error {
 		if !ctx.Bool("skip-update") {
-			if isUpdated := internal.Update(Version); isUpdated {
-				os.Exit(0)
+			timer := time.NewTimer(3 *time.Second)
+
+			select {
+			case <-timer.C:
+				log.Println("update timeout, skip auto update")
+				return nil
+			case result := <-__update__():
+				if result {
+					os.Exit(0)
+				}
+				os.Exit(1)
 			}
+
 		}
 		return nil
 	}
@@ -46,4 +57,13 @@ func main() {
 		log.Fatal(err)
 	}
 	os.Exit(0)
+}
+
+// -- >
+func __update__() <-chan bool {
+	ch := make(chan bool)
+	go func() {
+		ch <-internal.Update(Version)
+	}()
+	return ch
 }

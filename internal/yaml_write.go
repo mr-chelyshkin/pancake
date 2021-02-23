@@ -36,7 +36,7 @@ func WriteFile(filePath string, dataBytes []byte) error {
 	return nil
 }
 
-// --- >
+// -- >
 func __isWritable__(path string) (bool, error) {
 	info, err := os.Stat(path)
 	if err != nil {

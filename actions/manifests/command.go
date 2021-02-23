@@ -28,7 +28,7 @@ func Init(flags []cli.Flag) cli.Command{
 	}
 }
 
-// --- >
+// -- >
 func run(ctx *cli.Context) error {
 	var manifestsDir string
 
@@ -58,7 +58,7 @@ func run(ctx *cli.Context) error {
 		return err
 	}
 
-	manifests, err := pancake.GenerateManifest(raw.(pancake.K8STemplate), path.Join(manifestsDir, ""))
+	manifests, err := pancake.GenerateManifests(raw.(pancake.K8STemplate), path.Join(manifestsDir, ""))
 	if err != nil {
 		return fmt.Errorf("generate manifests: %s", err)
 	}

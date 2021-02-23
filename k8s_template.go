@@ -61,23 +61,23 @@ type Application struct {
 	Affinity       string    `yaml:"affinity"`
 	ReplicasNum    string    `yaml:"replicas_num"`
 	VersioningBy   string    `yaml:"versioning_by"`
-	PostStart      string    `yaml:"post_start,      omitempty"`
-	PreStop        string    `yaml:"pre_stop,        omitempty"`
-	Liveness       string    `yaml:"liveness,        omitempty"`
-	MaxSurge       string    `yaml:"max_surge,       omitempty"`
-	MaxUnavailable string    `yaml:"max_unavailable, omitempty"`
-	InitContainers []string  `yaml:"init_containers, omitempty"`
-	SideContainers []string  `yaml:"side_containers, omitempty"`
+	PostStart      string    `yaml:"post_start,omitempty"`
+	PreStop        string    `yaml:"pre_stop,omitempty"`
+	Liveness       string    `yaml:"liveness,omitempty"`
+	MaxSurge       string    `yaml:"max_surge,omitempty"`
+	MaxUnavailable string    `yaml:"max_unavailable,omitempty"`
+	InitContainers []string  `yaml:"init_containers,omitempty"`
+	SideContainers []string  `yaml:"side_containers,omitempty"`
 
 	Limit    Limit      `yaml:"limit"`
-	Ingress  []Firewall `yaml:"ingress, omitempty"`
-	Egress   []Firewall `yaml:"egress,  omitempty"`
+	Ingress  []Firewall `yaml:"ingress,omitempty"`
+	Egress   []Firewall `yaml:"egress,omitempty"`
 }
 
 type Limit struct {
 	Cpu string `yaml:"cpu"`
 	Mem string `yaml:"mem"`
-	Gpu string `yaml:"gpu"`
+	Gpu string `yaml:"gpu,omitempty"`
 }
 
 type Firewall struct {
@@ -152,7 +152,7 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 func Validate(data K8STemplate) error {
 	// !IMPORTANT: chBuf = count of concurrency validate functions
 	// otherwise function will be wait channels or close early
-	var chBuf = 17
+	chBuf := 17
 	chErrMsg := make(chan string, chBuf)
 
 	// -- >
