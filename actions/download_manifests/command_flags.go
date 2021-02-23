@@ -1,4 +1,4 @@
-package get_manifests
+package download_manifests
 
 import "github.com/urfave/cli"
 

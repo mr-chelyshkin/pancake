@@ -1,4 +1,4 @@
-package template
+package generate_configs
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ template command.
 
 func Init(flags []cli.Flag) cli.Command{
 	return cli.Command{
-		Name:   "template",
+		Name:   "generate-configs",
 		Usage:  "generate yaml format configs for manual filling [used by cli-app for manifest generating]",
 
 		Flags:  append(flags, commandFlags()...),

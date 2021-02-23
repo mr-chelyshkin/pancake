@@ -1,12 +1,12 @@
-package manifests
+package generate_manifests
 
 import (
 	"fmt"
 	"github.com/urfave/cli"
 	"io/ioutil"
-	"log"
 	"os"
 	"pancake"
+	"pancake/globals"
 	"pancake/internal"
 	"path"
 	"strings"
@@ -20,7 +20,7 @@ manifest command.
 
 func Init(flags []cli.Flag) cli.Command{
 	return cli.Command{
-		Name:   "manifest",
+		Name:   "generate-manifests",
 		Usage:  "generate manifests from template and manifests modules",
 
 		Flags:  append(flags, commandFlags()...),
@@ -32,44 +32,49 @@ func Init(flags []cli.Flag) cli.Command{
 func run(ctx *cli.Context) error {
 	var manifestsDir string
 
+	// -- >
 	if ctx.String(flagPath) == "" {
+		// create temp directory for manifests templates
 		tempDir, err := ioutil.TempDir("/tmp", "_manifest")
 		if err != nil {
 			return fmt.Errorf("create temp direcotry: %s", err)
 		}
 		defer os.RemoveAll(tempDir)
 
+		// pull manifests templates to temp directory
 		if err := internal.PullManifestTemplates(tempDir); err != nil {
 			return fmt.Errorf("pull k8s manifests templates from '%s': %s", tempDir, err)
 		}
-		manifestsDir = tempDir
+
+		manifestsDir = path.Join(tempDir, globals.ManifestGitProject)
 	} else {
 		manifestsDir = ctx.String(flagPath)
 	}
-
 	// -- >
+
 	var template pancake.K8STemplate
 	raw, err := internal.ReadYaml(ctx.String(flagConfigs), template)
 	if err != nil {
 		return fmt.Errorf("yaml configs '%s': %s", ctx.String(flagConfigs), err)
 	}
 
+	// validate k8s templates
 	if err := pancake.Validate(raw.(pancake.K8STemplate)); err != nil {
-		return err
+		return fmt.Errorf("config validation errors:\n%s", err)
 	}
 
-	manifests, err := pancake.GenerateManifests(raw.(pancake.K8STemplate), path.Join(manifestsDir, ""))
+	// generate manifests
+	manifests, err := pancake.GenerateManifests(raw.(pancake.K8STemplate), manifestsDir)
 	if err != nil {
 		return fmt.Errorf("generate manifests: %s", err)
 	}
-	// -- >
 
+	// -- >
 	if ctx.Bool(flagStdOut) {
 		fmt.Println(strings.Join(manifests, "\n"))
 	} else {
-		fmt.Println("TODO: write to files")
+		fmt.Println("TO DO: write")
 	}
 
-	log.Println("manifest generated")
 	return nil
 }

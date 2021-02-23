@@ -187,7 +187,7 @@ func Validate(data K8STemplate) error {
 				}
 			}
 			if msg != "" {
-				return fmt.Errorf("config validation errors:\n%s", msg)
+				return fmt.Errorf(msg)
 			}
 			return nil
 		}

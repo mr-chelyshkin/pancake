@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/urfave/cli"
-	"pancake/actions/get_manifests"
-	"pancake/actions/manifests"
-	"pancake/actions/template"
+	"pancake/actions/download_manifests"
+	"pancake/actions/generate_configs"
+	"pancake/actions/generate_manifests"
 )
 
 /*
@@ -13,8 +13,8 @@ import (
 
 func commands(flags []cli.Flag) []cli.Command {
 	return []cli.Command{
-		template.Init(flags),
-		manifests.Init(flags),
-		get_manifests.Init(flags),
+		generate_configs.Init(flags),
+		generate_manifests.Init(flags),
+		download_manifests.Init(flags),
 	}
 }

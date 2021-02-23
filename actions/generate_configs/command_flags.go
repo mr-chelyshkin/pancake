@@ -1,4 +1,4 @@
-package template
+package generate_configs
 
 import "github.com/urfave/cli"
 

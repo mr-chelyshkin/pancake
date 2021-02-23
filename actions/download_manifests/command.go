@@ -1,4 +1,4 @@
-package get_manifests
+package download_manifests
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ get-manifests command.
 
 func Init(flags []cli.Flag) cli.Command{
 	return cli.Command{
-		Name:   "get-manifests",
+		Name:   "download-templates",
 		Usage:  "download k8s manifests templates to local",
 
 		Flags:  append(flags, commandFlags()...),
