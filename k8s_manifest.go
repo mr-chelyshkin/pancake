@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/flosch/pongo2/v4"
 	"gopkg.in/tomb.v1"
-	"log"
 	"os"
 	"path"
 	"sync"
@@ -18,13 +17,13 @@ k8s manifest generator.
 		for work with jinja use: "github.com/flosch/pongo2"
 */
 
-func GenerateManifests(templateUser K8STemplate, templateManifestsDir string) ([]string, error) {
+func GenerateManifests(templateUser K8STemplate, templateManifestsDir string) (*[]string, error) {
 	var serviceManifests []string
 
 	var goroutineTracker tomb.Tomb
 	defer goroutineTracker.Done()
 
-	manifests := make(chan string, 1)
+	manifests := make(chan string, len(templateUser.Applications))
 	defer close(manifests)
 
 	wg := &sync.WaitGroup{}
@@ -42,13 +41,12 @@ func GenerateManifests(templateUser K8STemplate, templateManifestsDir string) ([
 				templateUser.Maintainer,
 				app,
 			)
+
 			if err != nil {
 				goroutineTracker.Kill(err)
 			} else {
-				fmt.Println(*template)
+				manifests <-*template
 			}
-
-			manifests <-*template
 		}(wg, app, templateManifestsDir)
 	}
 	// -- >
@@ -57,27 +55,32 @@ func GenerateManifests(templateUser K8STemplate, templateManifestsDir string) ([
 		wg.Wait()
 	}()
 
-	select {
-	case app := <-manifests:
-		serviceManifests = append(serviceManifests, app)
-	case <-goroutineTracker.Dying():
-		log.Fatal(goroutineTracker.Err())
-	}
+	for {
+		select {
+		case app := <-manifests:
+			serviceManifests = append(serviceManifests, app)
 
-	return serviceManifests, nil
+			// return if generate all manifests apps from config
+			if len(templateUser.Applications) == len(serviceManifests) {
+				return &serviceManifests, nil
+			}
+		case <-goroutineTracker.Dying():
+			return nil, goroutineTracker.Err()
+		}
+	}
 }
 
 // -- >
 func generate(manifestsDir, namespace, department, maintainer string, app Application) (*string, error) {
 	template, err := __getTemplatePath__(manifestsDir, department, "base.yaml.j2")
 	if err != nil {
-		return nil, fmt.Errorf("base block, %s", err)
+		return nil, err
 	}
 
 	var tpl = pongo2.Must(pongo2.FromFile(*template))
 	out, err := tpl.Execute(pongo2.Context{"namespace": namespace, "app": app, "maintainer": maintainer})
 	if err != nil {
-		return nil, fmt.Errorf("base tpl execute, %s", err)
+		return nil, err
 	}
 
 	return &out, nil
@@ -95,5 +98,5 @@ func __getTemplatePath__(manifestsDir, department, filename string) (*string, er
 		return &generalTemplate, nil
 	}
 
-	return nil, fmt.Errorf(fmt.Sprintf("manifest template not found, in: %s", manifestsDir))
+	return nil, fmt.Errorf(fmt.Sprintf("template not found, in: %s", manifestsDir))
 }
