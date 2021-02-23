@@ -17,7 +17,7 @@ k8s manifest generator.
 		for work with jinja use: "github.com/flosch/pongo2"
 */
 
-func GenerateManifests(templateUser K8STemplate, templateManifestsDir string) (*[]string, error) {
+func GenerateManifests(templateUser K8STemplate, manifestsDir string) (*[]string, error) {
 	var serviceManifests []string
 
 	var goroutineTracker tomb.Tomb
@@ -47,7 +47,7 @@ func GenerateManifests(templateUser K8STemplate, templateManifestsDir string) (*
 			} else {
 				manifests <-*template
 			}
-		}(wg, app, templateManifestsDir)
+		}(wg, app, manifestsDir)
 	}
 	// -- >
 
