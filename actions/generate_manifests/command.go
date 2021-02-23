@@ -33,7 +33,7 @@ func run(ctx *cli.Context) error {
 	var manifestsDir string
 
 	// -- >
-	if ctx.String(flagConfigs) == "" {
+	if ctx.String(flagTemplates) == "" {
 		// create temp directory for manifests templates
 		tempDir, err := ioutil.TempDir("/tmp", "_manifest")
 		if err != nil {
@@ -48,7 +48,7 @@ func run(ctx *cli.Context) error {
 
 		manifestsDir = path.Join(tempDir, globals.ManifestGitProject)
 	} else {
-		manifestsDir = ctx.String(flagConfigs)
+		manifestsDir = ctx.String(flagTemplates)
 	}
 	// -- >
 
