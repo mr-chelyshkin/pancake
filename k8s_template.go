@@ -170,7 +170,7 @@ func Validate(data K8STemplate) error {
 	go data.__validateServiceName__(chErrMsg)
 	go data.__validateServiceType__(chErrMsg)
 	go data.__validateVersioningBy__(chErrMsg)
-	go data.__validateServiceReplicas(chErrMsg)
+	go data.__validateServiceReplicas__(chErrMsg)
 	go data.__validateServiceInitContainers__(chErrMsg)
 	go data.__validateServiceSideContainers__(chErrMsg)
 	go data.__validateMaxSurge__(chErrMsg)
@@ -497,7 +497,7 @@ func (k K8STemplate) __validateVersioningBy__(ch chan<- string) {
 }
 
 //
-func (k K8STemplate) __validateServiceReplicas(ch chan<- string) {
+func (k K8STemplate) __validateServiceReplicas__(ch chan<- string) {
 	internalCh := make(chan string, len(k.Applications))
 
 	// -- >
