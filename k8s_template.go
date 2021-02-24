@@ -21,22 +21,9 @@ k8s template data generator.
 
 // pre-defined config values
 const (
-	confMaintainer = "<service_maintainer>"
-	confDepartment = "<service_department>"
-	confNamespace  = "<service_namespace>"
-
-	confAppName           = "<app_name>"
-	confAppType           = "<deploy/cronjob/ds/etc>"
-	confAppVersioningBy   = "<tag/commit_hash>"
-	confAppPostStart      = "<post-start_action>"
-	confAppPreStop        = "<pre-stop_action>"
-	confAppAffinity       = "<affinity>"
-	confAppMaxSurge       = "<max_surge_percentage>"
-	confAppMaxUnavailable = "<max_unavailable_percentage>"
-	confAppReplicasNum    = "<replicas_num>"
-	confAppInitContainers = "<init_list_actions>"
-	confAppSideContainers = "<side_list_actions>"
-
+	confMaintainer  = "<service_maintainer>"
+	confDepartment  = "<service_department>"
+	confNamespace   = "<service_namespace>"
 	confResLimitCpu = "<cpu_time_pod_limit>"
 	confResLimitGpu = "<gpu_time_pod_limit>"
 	confResLimitMem = "<mem_pod_limit>"
@@ -44,6 +31,17 @@ const (
 	confResReqGpu   = "<gpu_time_pod_requested>"
 	confResReqMem   = "<mem_pod_limit>"
 
+	confAppName               = "<app_name>"
+	confAppType               = "<deploy/cronjob/ds/etc>"
+	confAppVersioningBy       = "<tag/commit_hash>"
+	confAppPostStart          = "<post-start_action>"
+	confAppPreStop            = "<pre-stop_action>"
+	confAppAffinity           = "<affinity>"
+	confAppMaxSurge           = "<max_surge_percentage>"
+	confAppMaxUnavailable     = "<max_unavailable_percentage>"
+	confAppReplicasNum        = "<replicas_num>"
+	confAppInitContainers     = "<init_list_actions>"
+	confAppSideContainers     = "<side_list_actions>"
 	confFirewallGroup         = "<group_name>"
 	confFirewallService       = "<k8s_pod_service>"
 	confFirewallMask          = "<ip_mask>"
