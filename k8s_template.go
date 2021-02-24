@@ -42,11 +42,16 @@ const (
 	confAppReplicasNum        = "<replicas_num>"
 	confAppInitContainers     = "<init_list_actions>"
 	confAppSideContainers     = "<side_list_actions>"
+
 	confFirewallGroup         = "<group_name>"
 	confFirewallService       = "<k8s_pod_service>"
 	confFirewallMask          = "<ip_mask>"
 	confFirewallPortsPort     = "<port>"
 	confFirewallPortsProtocol = "<protocol>"
+
+	confPrometheusPath        = "<path>"
+	confPrometheusScrape      = "<scrape>"
+	confPrometheusPort        = "<port>"
 )
 
 type K8STemplate struct {
@@ -71,6 +76,7 @@ type Application struct {
 	InitContainers     []string  `yaml:"init_containers,omitempty"`
 	SideContainers     []string  `yaml:"side_containers,omitempty"`
 
+	Prometheus         Prometheus `yaml:"prometheus,omitempty"`
 	ResourcesLimit     Resources  `yaml:"resources_limit,omitempty"`
 	ResourcesRequested Resources  `yaml:"resources_requested,omitempty"`
 
@@ -94,6 +100,12 @@ type Firewall struct {
 type Ports struct {
 	Protocol string `yaml:"protocol"`
 	Port     string `yaml:"port"`
+}
+
+type Prometheus struct {
+	Path   string `yaml:"path,omitempty"`
+	Scrape string `yaml:"scrape,omitempty"`
+	Port   string `yaml:"port,omitempty"`
 }
 
 // -- >
@@ -120,6 +132,7 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 	go __templateMaintainer__()
 	go __templateDepartment__()
 	go __templateNamespace__()
+	go __templatePrometheus__()
 	<-wait
 
 	app := Application{
@@ -135,6 +148,7 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 		InitContainers: <-chTemplateServiceInitContainers,
 		SideContainers: <-chTemplateServiceSideContainers,
 
+		Prometheus: <-chTemplatePrometheus,
 		Ingress: <-chTemplateServiceIngress,
 		Egress:  <-chTemplateServiceEgress,
 
@@ -159,11 +173,11 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 func Validate(data K8STemplate) error {
 	// !IMPORTANT: chBuf = count of concurrency validate functions
 	// otherwise function will be wait channels or close early
-	chBuf := 18
+	chBuf := 19
 	chErrMsg := make(chan string, chBuf)
 
 	// -- >
-	// 18 concurrency validate functions
+	// 19 concurrency validate functions
 	go data.__validateNamespace__(chErrMsg)
 	go data.__validateDepartment__(chErrMsg)
 	go data.__validateMaintainer__(chErrMsg)
@@ -182,6 +196,7 @@ func Validate(data K8STemplate) error {
 	go data.__validateServiceResourcesLimits__(chErrMsg)
 	go data.__validateServiceEgress__(chErrMsg)
 	go data.__validateServiceIngress__(chErrMsg)
+	go data.__validateServicePrometheus__(chErrMsg)
 	// -- >
 
 	for {
@@ -207,9 +222,20 @@ func Validate(data K8STemplate) error {
 */
 
 //
+var chTemplatePrometheus = make(chan Prometheus)
+func __templatePrometheus__() {
+	chTemplatePrometheus <-Prometheus{
+		Path:   confPrometheusPath,
+		Scrape: confPrometheusScrape,
+		Port:   confPrometheusPort,
+	}
+	defer close(chTemplatePrometheus)
+}
+
+//
 var chTemplateServiceIngress = make(chan []Firewall)
 func __templateServiceIngress__() {
-	chTemplateServiceIngress <- []Firewall{
+	chTemplateServiceIngress <-[]Firewall{
 		{
 			Group:   confFirewallGroup,
 			Service: confFirewallService,
@@ -228,7 +254,7 @@ func __templateServiceIngress__() {
 //
 var chTemplateServiceEgress = make(chan []Firewall)
 func __templateServiceEgress__() {
-	chTemplateServiceEgress <- []Firewall{
+	chTemplateServiceEgress <-[]Firewall{
 		{
 			Group:   confFirewallGroup,
 			Service: confFirewallService,
@@ -806,6 +832,48 @@ func (k K8STemplate) __validateServiceResourcesRequested__(ch chan<- string) {
 			}
 			if data.ResourcesRequested.Mem == confResReqMem || data.ResourcesLimit.Mem == "" {
 				msg += "[ -app:ResourcesRequested:mem ] is empty\n"
+			}
+			internalCh <-msg
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
+	ch <-msg
+	return
+}
+
+//
+func (k K8STemplate) __validateServicePrometheus__(ch chan<- string) {
+	internalCh := make(chan string, len(k.Applications))
+
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
+	for _, app := range k.Applications {
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
+
+			empty := Prometheus{}
+			if data.Prometheus == empty {
+				return
+			}
+
+			var msg string
+			if data.Prometheus.Path == confPrometheusPath {
+				msg += "[ -app:Prometheus:path ] is empty\n"
+			}
+			if data.Prometheus.Scrape == confPrometheusScrape {
+				msg += "[ -app:Prometheus:scrape ] is empty\n"
+			}
+			if data.Prometheus.Port == confPrometheusPort {
+				msg += "[ -app:Prometheus:port ] is empty\n"
 			}
 			internalCh <-msg
 
