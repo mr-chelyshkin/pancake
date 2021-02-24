@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/urfave/cli"
 	"io/ioutil"
+	"log"
 	"os"
 	"pancake"
 	"pancake/globals"
@@ -80,6 +81,7 @@ func run(ctx *cli.Context) error {
 				return fmt.Errorf("write manifest to %s, %s", file, err)
 			}
 		}
+		log.Println("data was saved in ", manifestsDir)
 	}
 
 	return nil
