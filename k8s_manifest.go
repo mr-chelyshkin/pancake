@@ -19,7 +19,7 @@ k8s manifest generator.
 		return map as: [application_name]k8s_manifest.
 */
 
-func GenerateManifests(templateUser K8STemplate, manifestsDir string) (*map[string]string, error) {
+func GenerateManifests(templateUser K8STemplate, stage, manifestsDir string) (*map[string]string, error) {
 	serviceManifests := make(map[string]string)
 
 	var goroutineTracker tomb.Tomb
@@ -33,14 +33,15 @@ func GenerateManifests(templateUser K8STemplate, manifestsDir string) (*map[stri
 
 	// -- >
 	for _, app := range templateUser.Applications {
-		go func(wg *sync.WaitGroup, app Application, manifestsDir string) {
+		go func(wg *sync.WaitGroup, app Application, stage, manifestsDir string) {
 			defer wg.Done()
 
 			template, err := generate(
-				manifestsDir,
 				templateUser.Namespace,
 				templateUser.Department,
 				templateUser.Maintainer,
+				manifestsDir,
+				stage,
 				app,
 			)
 
@@ -49,7 +50,7 @@ func GenerateManifests(templateUser K8STemplate, manifestsDir string) (*map[stri
 			} else {
 				manifests <-[2]string{app.Name, *template}
 			}
-		}(wg, app, manifestsDir)
+		}(wg, app, stage, manifestsDir)
 	}
 	// -- >
 
@@ -74,14 +75,14 @@ func GenerateManifests(templateUser K8STemplate, manifestsDir string) (*map[stri
 }
 
 // -- >
-func generate(manifestsDir, namespace, department, maintainer string, app Application) (*string, error) {
+func generate(namespace, department, maintainer, manifestsDir, stage string, app Application) (*string, error) {
 	template, err := __getTemplatePath__(manifestsDir, department, "base.yaml.j2")
 	if err != nil {
 		return nil, err
 	}
 
 	var tpl = pongo2.Must(pongo2.FromFile(*template))
-	out, err := tpl.Execute(pongo2.Context{"namespace": namespace, "app": app, "maintainer": maintainer})
+	out, err := tpl.Execute(pongo2.Context{"namespace": namespace, "app": app, "maintainer": maintainer, "stage": stage})
 	if err != nil {
 		return nil, err
 	}

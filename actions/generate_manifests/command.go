@@ -64,7 +64,7 @@ func run(ctx *cli.Context) error {
 	}
 
 	// generate manifests
-	manifests, err := pancake.GenerateManifests(raw.(pancake.K8STemplate), manifestsDir)
+	manifests, err := pancake.GenerateManifests(raw.(pancake.K8STemplate), ctx.String(flagStage), manifestsDir)
 	if err != nil {
 		return fmt.Errorf("generate manifests: %s", err)
 	}

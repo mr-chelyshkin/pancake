@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/user"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -36,9 +37,12 @@ const (
 	confAppInitContainers = "<init_list_actions>"
 	confAppSideContainers = "<side_list_actions>"
 
-	confLimitCpu = "<cpu_time_pod_limit>"
-	confLimitGpu = "<gpu_time_pod_limit>"
-	confLimitMem = "<mem_pod_limit>"
+	confResLimitCpu = "<cpu_time_pod_limit>"
+	confResLimitGpu = "<gpu_time_pod_limit>"
+	confResLimitMem = "<mem_pod_limit>"
+	confResReqCpu   = "<cpu_time_pod_requested>"
+	confResReqGpu   = "<gpu_time_pod_requested>"
+	confResReqMem   = "<mem_pod_limit>"
 
 	confFirewallGroup         = "<group_name>"
 	confFirewallService       = "<k8s_pod_service>"
@@ -56,25 +60,27 @@ type K8STemplate struct {
 }
 
 type Application struct {
-	Name           string    `yaml:"name"`
-	Type           string    `yaml:"type"`
-	Affinity       string    `yaml:"affinity"`
-	ReplicasNum    string    `yaml:"replicas_num"`
-	VersioningBy   string    `yaml:"versioning_by"`
-	PostStart      string    `yaml:"post_start,omitempty"`
-	PreStop        string    `yaml:"pre_stop,omitempty"`
-	Liveness       string    `yaml:"liveness,omitempty"`
-	MaxSurge       string    `yaml:"max_surge,omitempty"`
-	MaxUnavailable string    `yaml:"max_unavailable,omitempty"`
-	InitContainers []string  `yaml:"init_containers,omitempty"`
-	SideContainers []string  `yaml:"side_containers,omitempty"`
+	Name               string    `yaml:"name"`
+	Type               string    `yaml:"type"`
+	Affinity           string    `yaml:"affinity"`
+	ReplicasNum        string    `yaml:"replicas_num"`
+	VersioningBy       string    `yaml:"versioning_by"`
+	PostStart          string    `yaml:"post_start,omitempty"`
+	PreStop            string    `yaml:"pre_stop,omitempty"`
+	Liveness           string    `yaml:"liveness,omitempty"`
+	MaxSurge           string    `yaml:"max_surge,omitempty"`
+	MaxUnavailable     string    `yaml:"max_unavailable,omitempty"`
+	InitContainers     []string  `yaml:"init_containers,omitempty"`
+	SideContainers     []string  `yaml:"side_containers,omitempty"`
 
-	Limit    Limit      `yaml:"limit"`
-	Ingress  []Firewall `yaml:"ingress,omitempty"`
-	Egress   []Firewall `yaml:"egress,omitempty"`
+	ResourcesLimit     Resources  `yaml:"resources_limit,omitempty"`
+	ResourcesRequested Resources  `yaml:"resources_requested,omitempty"`
+
+	Ingress []Firewall `yaml:"ingress,omitempty"`
+	Egress  []Firewall `yaml:"egress,omitempty"`
 }
 
-type Limit struct {
+type Resources struct {
 	Cpu string `yaml:"cpu"`
 	Mem string `yaml:"mem"`
 	Gpu string `yaml:"gpu,omitempty"`
@@ -100,7 +106,8 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 	wait <-struct{}{}
 	go __templateServiceIngress__()
 	go __templateServiceEgress__()
-	go __templateServiceLimits__()
+	go __templateServiceResourcesLimits__()
+	go __templateServiceResourcesRequested__()
 	go __templateServiceAffinity__()
 	go __templateServicePreStop__()
 	go __templateServicePostStart__()
@@ -130,9 +137,11 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 		InitContainers: <-chTemplateServiceInitContainers,
 		SideContainers: <-chTemplateServiceSideContainers,
 
-		Limit:   <-chTemplateServiceLimits,
 		Ingress: <-chTemplateServiceIngress,
 		Egress:  <-chTemplateServiceEgress,
+
+		ResourcesLimit:     <-chTemplateServiceResourcesLimits,
+		ResourcesRequested: <-chTemplateServiceResourcesRequested,
 	}
 	var apps []Application
 
@@ -152,11 +161,11 @@ func GenerateTemplateObject(appsCount int) K8STemplate {
 func Validate(data K8STemplate) error {
 	// !IMPORTANT: chBuf = count of concurrency validate functions
 	// otherwise function will be wait channels or close early
-	chBuf := 17
+	chBuf := 18
 	chErrMsg := make(chan string, chBuf)
 
 	// -- >
-	// 17 concurrency validate functions
+	// 18 concurrency validate functions
 	go data.__validateNamespace__(chErrMsg)
 	go data.__validateDepartment__(chErrMsg)
 	go data.__validateMaintainer__(chErrMsg)
@@ -171,7 +180,8 @@ func Validate(data K8STemplate) error {
 	go data.__validateServiceAffinity__(chErrMsg)
 	go data.__validatePostStart__(chErrMsg)
 	go data.__validatePreStop__(chErrMsg)
-	go data.__validateServiceLimits__(chErrMsg)
+	go data.__validateServiceResourcesRequested__(chErrMsg)
+	go data.__validateServiceResourcesLimits__(chErrMsg)
 	go data.__validateServiceEgress__(chErrMsg)
 	go data.__validateServiceIngress__(chErrMsg)
 	// -- >
@@ -237,14 +247,25 @@ func __templateServiceEgress__() {
 }
 
 //
-var chTemplateServiceLimits = make(chan Limit)
-func __templateServiceLimits__() {
-	chTemplateServiceLimits <-Limit{
-		Cpu: confLimitCpu,
-		Mem: confLimitMem,
-		Gpu: confLimitGpu,
+var chTemplateServiceResourcesLimits = make(chan Resources)
+func __templateServiceResourcesLimits__() {
+	chTemplateServiceResourcesLimits <-Resources{
+		Cpu: confResLimitCpu,
+		Mem: confResLimitGpu,
+		Gpu: confResLimitMem,
 	}
-	defer close(chTemplateServiceLimits)
+	defer close(chTemplateServiceResourcesLimits)
+}
+
+//
+var chTemplateServiceResourcesRequested = make(chan Resources)
+func __templateServiceResourcesRequested__() {
+	chTemplateServiceResourcesRequested <-Resources{
+		Cpu: confResReqCpu,
+		Mem: confResReqGpu,
+		Gpu: confResReqMem,
+	}
+	defer close(chTemplateServiceResourcesRequested)
 }
 
 //
@@ -589,6 +610,9 @@ func (k K8STemplate) __validateMaxSurge__(ch chan<- string) {
 				internalCh <-"[ -app:max_surge ] is empty\n"
 				return
 			}
+			if !strings.HasSuffix(data.MaxSurge, "%") {
+				internalCh <-"[ -app:max_surge ] should end with '%%'\n"
+			}
 
 		}(wg, app)
 	}
@@ -618,6 +642,9 @@ func (k K8STemplate) __validateMaxUnavailable__(ch chan<- string) {
 			if data.MaxUnavailable == confAppMaxUnavailable {
 				internalCh <-"[ -app:max_unavailable ] is empty\n"
 				return
+			}
+			if !strings.HasSuffix(data.MaxUnavailable, "%") {
+				internalCh <-"[ -app:max_unavailable ] should end with '%%'\n"
 			}
 
 		}(wg, app)
@@ -725,7 +752,7 @@ func (k K8STemplate) __validateServiceAffinity__(ch chan<- string) {
 }
 
 //
-func (k K8STemplate) __validateServiceLimits__(ch chan<- string) {
+func (k K8STemplate) __validateServiceResourcesLimits__(ch chan<- string) {
 	internalCh := make(chan string, len(k.Applications))
 
 	// -- >
@@ -736,14 +763,51 @@ func (k K8STemplate) __validateServiceLimits__(ch chan<- string) {
 			defer wg.Done()
 
 			var msg string
-			if data.Limit.Gpu == confLimitGpu {
-				msg += "[ -app:limit:gpu ] is empty\n"
+			if data.ResourcesLimit.Gpu == confResLimitGpu {
+				msg += "[ -app:ResourcesLimit:gpu ] is empty\n"
 			}
-			if data.Limit.Cpu == confLimitCpu || data.Limit.Cpu == "" {
-				msg += "[ -app:limit:cpu ] is empty\n"
+			if data.ResourcesLimit.Cpu == confResLimitCpu || data.ResourcesLimit.Cpu == "" {
+				msg += "[ -app:ResourcesLimit:cpu ] is empty\n"
 			}
-			if data.Limit.Mem == confLimitMem || data.Limit.Mem == "" {
-				msg += "[ -app:limit:mem ] is empty\n"
+			if data.ResourcesLimit.Mem == confResLimitMem || data.ResourcesLimit.Mem == "" {
+				msg += "[ -app:ResourcesLimit:mem ] is empty\n"
+			}
+			internalCh <-msg
+
+		}(wg, app)
+	}
+	wg.Wait()
+	close(internalCh)
+	// -- >
+
+	var msg string
+	for validateMsg := range internalCh {
+		msg += validateMsg
+	}
+	ch <-msg
+	return
+}
+
+//
+func (k K8STemplate) __validateServiceResourcesRequested__(ch chan<- string) {
+	internalCh := make(chan string, len(k.Applications))
+
+	// -- >
+	wg := &sync.WaitGroup{}
+	wg.Add(len(k.Applications))
+	for _, app := range k.Applications {
+		go func(wg *sync.WaitGroup,data Application) {
+			defer wg.Done()
+
+			var msg string
+			if data.ResourcesRequested.Gpu == confResReqGpu {
+				msg += "[ -app:ResourcesRequested:gpu ] is empty\n"
+			}
+			if data.ResourcesRequested.Cpu == confResReqCpu || data.ResourcesLimit.Cpu == "" {
+				msg += "[ -app:ResourcesRequested:cpu ] is empty\n"
+			}
+			if data.ResourcesRequested.Mem == confResReqMem || data.ResourcesLimit.Mem == "" {
+				msg += "[ -app:ResourcesRequested:mem ] is empty\n"
 			}
 			internalCh <-msg
 
